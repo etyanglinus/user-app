@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 import 'package:fasta_deliveries/common/models/response_model.dart';
 import 'package:fasta_deliveries/features/auth/domain/models/auth_response_model.dart';
@@ -41,9 +43,9 @@ class AuthService implements AuthServiceInterface{
 
   Future<void> _updateHeaderFunctionality(AuthResponseModel authResponse, {bool alreadyInApp = false}) async {
     if(authResponse.isEmailVerified! && authResponse.isPhoneVerified! && authResponse.isPersonalInfo! && authResponse.token != null && authResponse.isExistUser == null) {
-      authRepositoryInterface.saveUserToken(authResponse.token??'', alreadyInApp: alreadyInApp);
-      await authRepositoryInterface.updateToken();
-      await authRepositoryInterface.clearSharedPrefGuestId();
+      await authRepositoryInterface.saveUserToken(authResponse.token??'', alreadyInApp: alreadyInApp);
+      unawaited(authRepositoryInterface.updateToken().catchError((_) {}));
+      unawaited(authRepositoryInterface.clearSharedPrefGuestId().catchError((_) {}));
     }
   }
 

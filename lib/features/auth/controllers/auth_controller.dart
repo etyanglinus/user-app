@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
@@ -188,9 +190,9 @@ class AuthController extends GetxController implements GetxService {
         responseModel.authResponseModel!.isEmailVerified! &&
         responseModel.authResponseModel!.isPersonalInfo! &&
         responseModel.authResponseModel!.isExistUser == null) {
-      Get.find<ProfileController>().getUserInfo();
-      Get.find<CartController>().getCartDataOnline();
-      Get.find<HomeController>().getCashBackOfferList();
+      unawaited(Get.find<ProfileController>().getUserInfo().catchError((_) {}));
+      unawaited(Get.find<CartController>().getCartDataOnline().catchError((_) {}));
+      unawaited(Get.find<HomeController>().getCashBackOfferList().catchError((_) {}));
     }
   }
 

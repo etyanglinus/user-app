@@ -1,15 +1,12 @@
-import 'package:fasta_deliveries/common/widgets/card_design/store_card_with_distance.dart';
-import 'package:fasta_deliveries/features/store/controllers/store_controller.dart';
-import 'package:fasta_deliveries/features/store/domain/models/store_model.dart';
+import 'package:fasta_deliveries/common/widgets/card_design/item_card.dart';
+import 'package:fasta_deliveries/features/item/controllers/item_controller.dart';
+import 'package:fasta_deliveries/features/item/domain/models/item_model.dart';
+import 'package:fasta_deliveries/features/splash/controllers/splash_controller.dart';
 import 'package:fasta_deliveries/features/home/widgets/web/web_new_on_view_widget.dart';
-import 'package:fasta_deliveries/helper/route_helper.dart';
 import 'package:fasta_deliveries/util/app_constants.dart';
 import 'package:fasta_deliveries/util/dimensions.dart';
-import 'package:fasta_deliveries/common/widgets/card_design/store_card.dart';
-import 'package:fasta_deliveries/common/widgets/rating_bar.dart';
 import 'package:fasta_deliveries/common/widgets/title_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:shimmer_animation/shimmer_animation.dart';
 import 'package:get/get.dart';
 
 class NewOnMartView extends StatelessWidget {
@@ -20,47 +17,38 @@ class NewOnMartView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<StoreController>(builder: (storeController) {
-      List<Store>? storeList = storeController.latestStoreList;
+    return GetBuilder<ItemController>(builder: (itemController) {
+      List<Item>? itemList = itemController.latestItemList;
+      bool isFood = Get.find<SplashController>().module != null && Get.find<SplashController>().module!.moduleType.toString() == AppConstants.food;
+      bool isShopModule = Get.find<SplashController>().module != null && Get.find<SplashController>().module!.moduleType.toString() == AppConstants.ecommerce;
 
-      return storeList != null ? storeList.isNotEmpty ? Padding(
+      return itemList != null ? itemList.isNotEmpty ? Padding(
         padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
         child: Column(children: [
 
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
             child: TitleWidget(
-              title: '${'new_on'.tr} ${AppConstants.appName}',
-              onTap: () => Get.toNamed(RouteHelper.getAllStoreRoute('latest')),
+              title: isShopModule ? 'new_products'.tr : 'recently_uploaded'.tr,
             ),
           ),
-          // const SizedBox(height: Dimensions.paddingSizeSmall),
 
-          (isPharmacy || isShop) ? SizedBox(
-            height: 215,
-            child: ListView.builder(
-                physics: const BouncingScrollPhysics(),
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.only(left: Dimensions.paddingSizeDefault),
-                itemCount: storeList.length,
-                itemBuilder: (context, index){
-                  return Padding(
-                    padding: const EdgeInsets.only(right: Dimensions.paddingSizeDefault, bottom: Dimensions.paddingSizeSmall, top: Dimensions.paddingSizeSmall),
-                    child: StoreCardWithDistance(store: storeList[index], isNewStore: isNewStore),
-                  );
-                }),
-          ) : SizedBox(
-            height: 140,
+          SizedBox(
+            height: 285,
             child: ListView.builder(
               controller: ScrollController(),
               physics: const BouncingScrollPhysics(),
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.only(left: Dimensions.paddingSizeSmall),
-              itemCount: storeList.length,
+              padding: const EdgeInsets.only(left: Dimensions.paddingSizeDefault),
+              itemCount: itemList.length,
               itemBuilder: (context, index){
-                  return Padding(
+                return Padding(
                   padding: const EdgeInsets.only(right: Dimensions.paddingSizeDefault, bottom: Dimensions.paddingSizeSmall, top: Dimensions.paddingSizeSmall),
-                  child: StoreCard(store: storeList[index]),
+                  child: ItemCard(
+                    item: itemList[index],
+                    isFood: isFood,
+                    isShop: isShopModule,
+                  ),
                 );
               },
             ),
@@ -70,63 +58,3 @@ class NewOnMartView extends StatelessWidget {
     });
   }
 }
-
-class PopularStoreShimmer extends StatelessWidget {
-  final StoreController storeController;
-  const PopularStoreShimmer({super.key, required this.storeController});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 150,
-      child: ListView.builder(
-        shrinkWrap: true,
-        physics: const BouncingScrollPhysics(),
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.only(left: Dimensions.paddingSizeSmall),
-        itemCount: 10,
-        itemBuilder: (context, index){
-          return Container(
-            height: 150, width: 200,
-            margin: const EdgeInsets.only(right: Dimensions.paddingSizeSmall, bottom: 5),
-            decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-                boxShadow: [BoxShadow(color: Colors.grey[300]!, blurRadius: 10, spreadRadius: 1)],
-            ),
-            child: Shimmer(
-              duration: const Duration(seconds: 2),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-
-                Container(
-                  height: 90, width: 200,
-                  decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(Dimensions.radiusSmall)),
-                      color: Colors.grey[300],
-                  ),
-                ),
-
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(Dimensions.paddingSizeExtraSmall),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
-
-                      Container(height: 10, width: 100, color: Colors.grey[300]),
-                      const SizedBox(height: 5),
-
-                      Container(height: 10, width: 130, color: Colors.grey[300]),
-                      const SizedBox(height: 5),
-
-                      const RatingBar(rating: 0.0, size: 12, ratingCount: 0),
-                    ]),
-                  ),
-                ),
-              ]),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-

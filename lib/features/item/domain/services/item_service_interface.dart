@@ -6,6 +6,7 @@ import 'package:fasta_deliveries/features/cart/domain/models/cart_model.dart';
 
 abstract class ItemServiceInterface {
   Future<ItemModel?> getPopularItemList({required String type, DataSourceEnum? source, required int offset, String? search, List<int>? categoryIds, List<String>? filter, int? rating, double? minPrice, double? maxPrice});
+  Future<ItemModel?> getLatestItemList({required String type, DataSourceEnum? source, required int offset});
   Future<ItemModel?> getReviewedItemList({required String type, DataSourceEnum? source, required int offset, String? search, List<int>? categoryIds, List<String>? filter, int? rating, double? minPrice, double? maxPrice});
   Future<ItemModel?> getFeaturedCategoriesItemList(DataSourceEnum? source);
   Future<List<Item>?> getRecommendedItemList(String type, DataSourceEnum? source);

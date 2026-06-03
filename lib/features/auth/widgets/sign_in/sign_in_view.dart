@@ -14,7 +14,6 @@ import 'package:fasta_deliveries/features/auth/widgets/sign_in/manual_login_widg
 import 'package:fasta_deliveries/features/auth/widgets/sign_in/otp_login_widget.dart';
 import 'package:fasta_deliveries/features/auth/widgets/social_login_widget.dart';
 import 'package:fasta_deliveries/features/favourite/controllers/favourite_controller.dart';
-import 'package:fasta_deliveries/features/location/controllers/location_controller.dart';
 import 'package:fasta_deliveries/features/splash/controllers/splash_controller.dart';
 import 'package:fasta_deliveries/features/verification/domein/enum/verification_type_enum.dart';
 import 'package:fasta_deliveries/features/verification/screens/verification_screen.dart';
@@ -314,7 +313,7 @@ class _SignInViewState extends State<SignInView> {
           Get.back();
         }
       } else {
-        Get.find<LocationController>().navigateToLocationScreen('sign-in', offNamed: true);
+        Get.offAllNamed(RouteHelper.getInitialRoute(fromSplash: false));
       }
     }
   }
@@ -354,7 +353,7 @@ class _SignInViewState extends State<SignInView> {
           Get.back();
         }
       }else {
-        Get.find<LocationController>().navigateToLocationScreen('sign-in', offNamed: true);
+        Get.offAllNamed(RouteHelper.getInitialRoute(fromSplash: false));
       }
     }
   }

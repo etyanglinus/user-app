@@ -1,5 +1,11 @@
 {
   "connection_to_api_server_failed": "Connection to API server failed due to internet connection",
+  "service_temporarily_unavailable": "We are having trouble connecting. Please check your connection and try again.",
+  "we_could_not_reach_the_service": "We could not reach the service right now. Please try again shortly.",
+  "new_products": "New Products",
+  "recently_uploaded": "Recently Uploaded",
+  "connection_unavailable": "Connection unavailable",
+  "check_connection_and_retry": "Please check your internet connection and try again.",
   "select_language": "Select Language",
   "save": "Save",
   "select_a_language": "Select a language",

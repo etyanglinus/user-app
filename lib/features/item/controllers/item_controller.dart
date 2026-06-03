@@ -28,6 +28,9 @@ class ItemController extends GetxController implements GetxService {
   
   List<Item>? _popularItemList;
   List<Item>? get popularItemList => _popularItemList;
+
+  List<Item>? _latestItemList;
+  List<Item>? get latestItemList => _latestItemList;
   
   List<Item>? _reviewedItemList;
   List<Item>? get reviewedItemList => _reviewedItemList;
@@ -357,6 +360,7 @@ class ItemController extends GetxController implements GetxService {
 
   void clearItemLists() {
     _popularItemList = null;
+    _latestItemList = null;
     _reviewedItemList = null;
     _discountedItemList = null;
     _featuredCategoriesItem = null;
@@ -418,6 +422,30 @@ class ItemController extends GetxController implements GetxService {
         _isLoading = false;
         update();
       }
+    }
+  }
+
+  Future<void> getLatestItemList({String offset = '1', DataSourceEnum dataSource = DataSourceEnum.local, bool notify = false}) async {
+    if(offset == '1') {
+      _latestItemList = null;
+      if(notify) update();
+    }
+
+    ItemModel? itemModel = await itemServiceInterface.getLatestItemList(
+      type: _popularType,
+      source: dataSource,
+      offset: int.parse(offset),
+    );
+
+    if(itemModel != null) {
+      _latestItemList = [];
+      _latestItemList!.addAll(itemModel.items!);
+      _isLoading = false;
+      update();
+    }
+
+    if(dataSource == DataSourceEnum.local) {
+      getLatestItemList(offset: offset, dataSource: DataSourceEnum.client, notify: notify);
     }
   }
 

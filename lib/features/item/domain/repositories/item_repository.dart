@@ -88,10 +88,9 @@ class ItemRepository implements ItemRepositoryInterface {
 
   Future<ItemModel?> _getPopularItemList({required String type, required DataSourceEnum source, required int offset, String? search, List<int>? categoryIds, List<String>? filter, int? rating, double? minPrice, double? maxPrice}) async {
     ItemModel? popularItemList;
-    String cacheId = '${AppConstants.popularItemUri}?type=$type-${Get.find<SplashController>().module!.id!}';
-
     final filterString = filter != null ? jsonEncode(filter) : [];
     final categoryIdsString = categoryIds != null ? jsonEncode(categoryIds) : [];
+    String cacheId = '${AppConstants.popularItemUri}?type=$type&offset=$offset&filter=$filterString&category_ids=$categoryIdsString-${Get.find<SplashController>().module!.id!}';
 
     Map<String, dynamic>? query = {
       'type': type,

@@ -86,12 +86,12 @@ class HomeScreen extends StatefulWidget {
       Get.find<ReelsController>().getReelsList(offset: 1);
       Get.find<ItemController>().getDiscountedItemList(offset: '1', firstTimeCategoryLoad: true);
       Get.find<ItemController>().getPopularItemList(offset: '1', firstTimeCategoryLoad: true);
+      Get.find<ItemController>().getLatestItemList();
       Get.find<ItemController>().getReviewedItemList(offset: '1', firstTimeCategoryLoad: true);
       Get.find<CategoryController>().getCategoryList(reload);
       Get.find<StoreController>().getPopularStoreList(reload, 'all', false);
       Get.find<CampaignController>().getBasicCampaignList(reload);
       Get.find<CampaignController>().getItemCampaignList(reload);
-      Get.find<StoreController>().getLatestStoreList(reload, 'all', false);
       Get.find<StoreController>().getTopOfferStoreList(reload, false);
       Get.find<ItemController>().getRecommendedItemList(reload, 'all', false);
       Get.find<StoreController>().getStoreList(1, reload);
@@ -275,12 +275,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   }
                   await Get.find<BannerController>().getPromotionalBannerList(true);
                   await Get.find<ItemController>().getDiscountedItemList(offset: '1');
+                  await Get.find<ItemController>().getLatestItemList(dataSource: DataSourceEnum.client);
                   await Get.find<CategoryController>().getCategoryList(true);
                   await Get.find<StoreController>().getPopularStoreList(true, 'all', false);
                   await Get.find<CampaignController>().getItemCampaignList(true);
                   Get.find<CampaignController>().getBasicCampaignList(true);
                   await Get.find<ItemController>().getPopularItemList(offset: '1');
-                  await Get.find<StoreController>().getLatestStoreList(true, 'all', false);
                   await Get.find<StoreController>().getTopOfferStoreList(true, false);
                   await Get.find<ItemController>().getReviewedItemList(offset: '1');
                   await Get.find<StoreController>().getStoreList(1, true);

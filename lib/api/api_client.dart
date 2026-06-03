@@ -20,8 +20,9 @@ import 'package:flutter/foundation.dart';
 class ApiClient extends GetxService {
   final String appBaseUrl;
   final SharedPreferences sharedPreferences;
-  static final String noInternetMessage = 'connection_to_api_server_failed'.tr;
-  final int timeoutInSeconds = 40;
+  static final String noInternetMessage = 'service_temporarily_unavailable'.tr;
+  static final String serverErrorMessage = 'we_could_not_reach_the_service'.tr;
+  final int timeoutInSeconds = 15;
 
   String? token;
   late Map<String, String> _mainHeaders;
@@ -228,7 +229,13 @@ class ApiClient extends GetxService {
       statusCode: response.statusCode,
       statusText: response.reasonPhrase,
     );
-    if (response0.statusCode != 200 &&
+    if (response0.statusCode != null && response0.statusCode! >= 500) {
+      response0 = Response(
+        statusCode: response0.statusCode,
+        body: response0.body,
+        statusText: serverErrorMessage,
+      );
+    } else if (response0.statusCode != 200 &&
         response0.body != null &&
         response0.body is! String) {
       if (response0.body.toString().startsWith('{errors: [{code:')) {

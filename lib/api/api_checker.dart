@@ -11,10 +11,24 @@ class ApiChecker {
         Get.find<FavouriteController>().removeFavourite();
         Get.offAllNamed(RouteHelper.getInitialRoute());
       });
-    }else {
+    } else {
       if(response.statusText != 'The guest id field is required.') {
-        showCustomSnackBar(response.statusText, getXSnackBar: getXSnackBar);
+        showCustomSnackBar(_friendlyMessage(response), getXSnackBar: getXSnackBar);
       }
     }
+  }
+
+  static String _friendlyMessage(Response response) {
+    final String message = response.statusText ?? '';
+    if(response.statusCode == 1 || response.statusCode == 0) {
+      return 'service_temporarily_unavailable'.tr;
+    }
+    if(response.statusCode != null && response.statusCode! >= 500) {
+      return 'we_could_not_reach_the_service'.tr;
+    }
+    if(message.toLowerCase().contains('server error') || message.toLowerCase().contains('internal server')) {
+      return 'we_could_not_reach_the_service'.tr;
+    }
+    return message.isNotEmpty ? message : 'sorry_something_went_wrong'.tr;
   }
 }

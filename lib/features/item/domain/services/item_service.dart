@@ -19,6 +19,11 @@ class ItemService implements ItemServiceInterface {
   }
 
   @override
+  Future<ItemModel?> getLatestItemList({required String type, DataSourceEnum? source, required int offset}) async {
+    return await itemRepositoryInterface.getList(isPopularItem: true, type: type, source: source, offset: offset, filter: ['latest']);
+  }
+
+  @override
   Future<ItemModel?> getReviewedItemList({required String type, DataSourceEnum? source, required int offset, String? search, List<int>? categoryIds, List<String>? filter, int? rating, double? minPrice, double? maxPrice}) async {
     return await itemRepositoryInterface.getList(isReviewedItem: true,  type: type, source: source, offset: offset, search: search, categoryIds: categoryIds, filter: filter, rating: rating, minPrice: minPrice, maxPrice: maxPrice);
   }
