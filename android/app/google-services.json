@@ -1,0 +1,97 @@
+{
+  "project_info": {
+    "project_number": "833886382257",
+    "project_id": "fasta-rides-457315",
+    "storage_bucket": "fasta-rides-457315.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:833886382257:android:010e044fa36ad48795da90",
+        "android_client_info": {
+          "package_name": "com.fastadeliveries.deliverymanapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "833886382257-qsb4nno3vf2m9mfsuii12ug0487lls35.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDefJ_zyJeCb6I4yLOIG5v-0fw9l3jFxz8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "833886382257-qsb4nno3vf2m9mfsuii12ug0487lls35.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:833886382257:android:78654c69c8fa197c95da90",
+        "android_client_info": {
+          "package_name": "com.fastadeliveries.userapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "833886382257-qsb4nno3vf2m9mfsuii12ug0487lls35.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDefJ_zyJeCb6I4yLOIG5v-0fw9l3jFxz8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "833886382257-qsb4nno3vf2m9mfsuii12ug0487lls35.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:833886382257:android:f2221535dc4efb3195da90",
+        "android_client_info": {
+          "package_name": "com.fastadeliveries.vendorapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "833886382257-qsb4nno3vf2m9mfsuii12ug0487lls35.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDefJ_zyJeCb6I4yLOIG5v-0fw9l3jFxz8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "833886382257-qsb4nno3vf2m9mfsuii12ug0487lls35.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
