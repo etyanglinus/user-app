@@ -65,7 +65,7 @@ Future<void> main() async {
     await Firebase.initializeApp(
       options: const FirebaseOptions(
         apiKey: "AIzaSyDefJ_zyJeCb6I4yLOIG5v-0fw9l3jFxz8",
-        appId: "1:833886382257:android:78654c69c8fa197c95da90",
+        appId: "1:833886382257:android:34b054e4b8f25d5a95da90",
         messagingSenderId: "833886382257",
         projectId: "fasta-rides-457315",
         storageBucket: "fasta-rides-457315.firebasestorage.app",
