@@ -7,6 +7,8 @@ class UserInfoModel {
   String? email;
   String? imageFullUrl;
   String? phone;
+  String? dateOfBirth;
+  String? dateOfBirthUpdatedAt;
   String? createdAt;
   String? password;
   int? orderCount;
@@ -31,6 +33,8 @@ class UserInfoModel {
     this.email,
     this.imageFullUrl,
     this.phone,
+    this.dateOfBirth,
+    this.dateOfBirthUpdatedAt,
     this.createdAt,
     this.password,
     this.orderCount,
@@ -56,6 +60,8 @@ class UserInfoModel {
     email = json['email'];
     imageFullUrl = json['image_full_url'];
     phone = json['phone'];
+    dateOfBirth = json['date_of_birth'];
+    dateOfBirthUpdatedAt = json['date_of_birth_updated_at'];
     createdAt = json['created_at'];
     password = json['password'];
     orderCount = json['order_count'];
@@ -89,6 +95,8 @@ class UserInfoModel {
     data['email'] = email;
     data['image_full_url'] = imageFullUrl;
     data['phone'] = phone;
+    data['date_of_birth'] = dateOfBirth;
+    data['date_of_birth_updated_at'] = dateOfBirthUpdatedAt;
     data['created_at'] = createdAt;
     data['password'] = password;
     data['order_count'] = orderCount;

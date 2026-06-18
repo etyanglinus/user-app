@@ -57,6 +57,14 @@ class OrderRepository implements OrderRepositoryInterface {
   }
 
   @override
+  Future<Response> reorder(String orderID, {bool replaceCart = true}) async {
+    return await apiClient.postData(AppConstants.reorderUri, {
+      'order_id': orderID,
+      'replace_cart': replaceCart,
+    }, handleError: false);
+  }
+
+  @override
   Future<bool> cancelOrder({required String orderID, String? reason, String? guestId, required bool isParcel, List<String>? reasons, String? comment}) async {
     bool success = false;
 

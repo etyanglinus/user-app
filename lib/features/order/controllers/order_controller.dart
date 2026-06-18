@@ -1,13 +1,16 @@
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:fasta_deliveries/common/widgets/custom_snackbar.dart';
 import 'package:fasta_deliveries/common/models/ongoing_order_model.dart';
 import 'package:fasta_deliveries/common/models/response_model.dart';
+import 'package:fasta_deliveries/features/cart/controllers/cart_controller.dart';
 import 'package:fasta_deliveries/features/checkout/domain/models/payment_model.dart';
 import 'package:fasta_deliveries/features/order/domain/models/order_cancellation_body.dart';
 import 'package:fasta_deliveries/features/order/domain/models/order_details_model.dart';
 import 'package:fasta_deliveries/features/order/domain/models/order_model.dart';
 import 'package:fasta_deliveries/features/order/domain/services/order_service_interface.dart';
 import 'package:fasta_deliveries/helper/auth_helper.dart';
+import 'package:fasta_deliveries/helper/route_helper.dart';
 
 class OrderController extends GetxController implements GetxService {
   final OrderServiceInterface orderServiceInterface;
@@ -34,6 +37,9 @@ class OrderController extends GetxController implements GetxService {
 
   bool _isPaymentLoading = false;
   bool get isPaymentLoading => _isPaymentLoading;
+
+  bool _isReorderLoading = false;
+  bool get isReorderLoading => _isReorderLoading;
 
   bool _showCancelled = false;
   bool get showCancelled => _showCancelled;
@@ -81,56 +87,58 @@ class OrderController extends GetxController implements GetxService {
 
   Future<PaymentModel?> getPaymentFailedDetails(String? orderID) async {
     _paymentModel = null;
-    _paymentModel = await orderServiceInterface.getPaymentFailedDetails(orderID);
+    _paymentModel = await orderServiceInterface.getPaymentFailedDetails(
+      orderID,
+    );
     _isLoading = false;
     update();
     return _paymentModel;
   }
 
-  void expandedUpdate(bool status){
+  void expandedUpdate(bool status) {
     _isExpanded = status;
     update();
   }
 
-  void setOrderCancelReason(String? reason){
+  void setOrderCancelReason(String? reason) {
     _cancelReason = reason;
     update();
   }
 
-  void selectReason(int index, {bool isUpdate = true}){
-    if(_selectedReasonIndex == index) {
+  void selectReason(int index, {bool isUpdate = true}) {
+    if (_selectedReasonIndex == index) {
       _selectedReasonIndex = -1;
-    }else {
+    } else {
       _selectedReasonIndex = index;
     }
 
-    if(isUpdate) {
+    if (isUpdate) {
       update();
     }
   }
 
-  void showOrders(){
+  void showOrders() {
     _showOneOrder = !_showOneOrder;
     update();
   }
 
-  void showRunningOrders({bool canUpdate = true}){
+  void showRunningOrders({bool canUpdate = true}) {
     _showBottomSheet = !_showBottomSheet;
-    if(canUpdate) {
+    if (canUpdate) {
       update();
     }
   }
 
   void pickRefundImage(bool isRemove) async {
-    if(isRemove) {
+    if (isRemove) {
       _refundImage = null;
-    }else {
+    } else {
       _refundImage = await ImagePicker().pickImage(source: ImageSource.gallery);
       update();
     }
   }
 
-  Future<void> getOrderCancelReasons()async {
+  Future<void> getOrderCancelReasons() async {
     _orderCancelReasons = null;
     _orderCancelReasons = await orderServiceInterface.getCancelReasons();
     update();
@@ -143,26 +151,37 @@ class OrderController extends GetxController implements GetxService {
     update();
   }
 
-  Future<void> submitRefundRequest(String note, String? orderId)async {
+  Future<void> submitRefundRequest(String note, String? orderId) async {
     _isLoading = true;
     update();
-    await orderServiceInterface.submitRefundRequest(_selectedReasonIndex, _refundReasons, note, orderId, _refundImage);
+    await orderServiceInterface.submitRefundRequest(
+      _selectedReasonIndex,
+      _refundReasons,
+      note,
+      orderId,
+      _refundImage,
+    );
     _isLoading = false;
     update();
   }
 
-  Future<void> getRunningOrders(int offset, {bool isUpdate = false, bool fromDashboard = false}) async {
-    if(offset == 1) {
+  Future<void> getRunningOrders(
+    int offset, {
+    bool isUpdate = false,
+    bool fromDashboard = false,
+  }) async {
+    if (offset == 1) {
       _runningOrderModel = null;
-      if(isUpdate) {
+      if (isUpdate) {
         update();
       }
     }
-    PaginatedOrderModel? orderModel = await orderServiceInterface.getRunningOrderList(offset, fromDashboard);
+    PaginatedOrderModel? orderModel = await orderServiceInterface
+        .getRunningOrderList(offset, fromDashboard);
     if (orderModel != null) {
       if (offset == 1) {
         _runningOrderModel = orderModel;
-      }else {
+      } else {
         _runningOrderModel!.orders!.addAll(orderModel.orders!);
         _runningOrderModel!.offset = orderModel.offset;
         _runningOrderModel!.totalSize = orderModel.totalSize;
@@ -172,17 +191,18 @@ class OrderController extends GetxController implements GetxService {
   }
 
   Future<void> getHistoryOrders(int offset, {bool isUpdate = false}) async {
-    if(offset == 1) {
+    if (offset == 1) {
       _historyOrderModel = null;
-      if(isUpdate) {
+      if (isUpdate) {
         update();
       }
     }
-    PaginatedOrderModel? orderModel = await orderServiceInterface.getHistoryOrderList(offset);
+    PaginatedOrderModel? orderModel = await orderServiceInterface
+        .getHistoryOrderList(offset);
     if (orderModel != null) {
       if (offset == 1) {
         _historyOrderModel = orderModel;
-      }else {
+      } else {
         _historyOrderModel!.orders!.addAll(orderModel.orders!);
         _historyOrderModel!.offset = orderModel.offset;
         _historyOrderModel!.totalSize = orderModel.totalSize;
@@ -201,14 +221,20 @@ class OrderController extends GetxController implements GetxService {
     _isLoading = true;
     _showCancelled = false;
 
-    if(_trackModel == null || (_trackModel!.orderType != 'parcel' && !_trackModel!.prescriptionOrder!)) {
-      List<OrderDetailsModel>? detailsList = await orderServiceInterface.getOrderDetails(orderID, AuthHelper.isLoggedIn() ? null : AuthHelper.getGuestId());
+    if (_trackModel == null ||
+        (_trackModel!.orderType != 'parcel' &&
+            !_trackModel!.prescriptionOrder!)) {
+      List<OrderDetailsModel>? detailsList = await orderServiceInterface
+          .getOrderDetails(
+            orderID,
+            AuthHelper.isLoggedIn() ? null : AuthHelper.getGuestId(),
+          );
       _isLoading = false;
       if (detailsList != null) {
         _orderDetails = [];
         _orderDetails!.addAll(detailsList);
       }
-    }else {
+    } else {
       _isLoading = false;
       _orderDetails = [];
     }
@@ -216,25 +242,39 @@ class OrderController extends GetxController implements GetxService {
     return _orderDetails;
   }
 
-  Future<ResponseModel?> trackOrder(String? orderID, OrderModel? orderModel, bool fromTracking,
-      {String? contactNumber, bool? fromGuestInput = false}) async {
+  Future<ResponseModel?> trackOrder(
+    String? orderID,
+    OrderModel? orderModel,
+    bool fromTracking, {
+    String? contactNumber,
+    bool? fromGuestInput = false,
+  }) async {
     _trackModel = null;
     _responseModel = null;
-    if(!fromTracking) {
+    if (!fromTracking) {
       _orderDetails = null;
     }
     _showCancelled = false;
-    if(orderModel == null) {
+    if (orderModel == null) {
       _isLoading = true;
       Response response = await orderServiceInterface.trackOrder(
-        orderID, AuthHelper.isLoggedIn() ? null : AuthHelper.getGuestId(),
+        orderID,
+        AuthHelper.isLoggedIn() ? null : AuthHelper.getGuestId(),
         contactNumber: contactNumber,
       );
       if (response.statusCode == 200) {
         _trackModel = OrderModel.fromJson(response.body);
-        _responseModel = ResponseModel(true, response.body.toString(), statusCode: response.statusCode);
+        _responseModel = ResponseModel(
+          true,
+          response.body.toString(),
+          statusCode: response.statusCode,
+        );
       } else {
-        _responseModel = ResponseModel(false, response.statusText, statusCode: response.statusCode);
+        _responseModel = ResponseModel(
+          false,
+          response.statusText,
+          statusCode: response.statusCode,
+        );
       }
       _isLoading = false;
       update();
@@ -245,11 +285,15 @@ class OrderController extends GetxController implements GetxService {
     return _responseModel;
   }
 
-  Future<ResponseModel?> timerTrackOrder(String orderID, {String? contactNumber}) async {
+  Future<ResponseModel?> timerTrackOrder(
+    String orderID, {
+    String? contactNumber,
+  }) async {
     _showCancelled = false;
 
     Response response = await orderServiceInterface.trackOrder(
-      orderID, AuthHelper.isLoggedIn() ? null : AuthHelper.getGuestId(),
+      orderID,
+      AuthHelper.isLoggedIn() ? null : AuthHelper.getGuestId(),
       contactNumber: contactNumber,
     );
     if (response.statusCode == 200) {
@@ -263,15 +307,32 @@ class OrderController extends GetxController implements GetxService {
     return _responseModel;
   }
 
-  Future<bool> cancelOrder({required int orderID, String? reason, String? guestId, required bool isParcel, List<String>? reasons, String? comment}) async {
+  Future<bool> cancelOrder({
+    required int orderID,
+    String? reason,
+    String? guestId,
+    required bool isParcel,
+    List<String>? reasons,
+    String? comment,
+  }) async {
     _isLoading = true;
     update();
-    bool success = await orderServiceInterface.cancelOrder(orderID: orderID.toString(), reason: reason, guestId: guestId, isParcel: isParcel, reasons: reasons, comment: comment);
+    bool success = await orderServiceInterface.cancelOrder(
+      orderID: orderID.toString(),
+      reason: reason,
+      guestId: guestId,
+      isParcel: isParcel,
+      reasons: reasons,
+      comment: comment,
+    );
     _isLoading = false;
     Get.back();
     if (success) {
-      OrderModel? orderModel = orderServiceInterface.prepareOrderModel(_runningOrderModel, orderID);
-      if(_runningOrderModel != null) {
+      OrderModel? orderModel = orderServiceInterface.prepareOrderModel(
+        _runningOrderModel,
+        orderID,
+      );
+      if (_runningOrderModel != null) {
         _runningOrderModel!.orders!.remove(orderModel);
       }
       _showCancelled = true;
@@ -280,14 +341,21 @@ class OrderController extends GetxController implements GetxService {
     return success;
   }
 
-  Future<bool> switchToCOD(String? orderID, {String? guestId, bool fromOrderDetails = false}) async {
-    if(fromOrderDetails) {
+  Future<bool> switchToCOD(
+    String? orderID, {
+    String? guestId,
+    bool fromOrderDetails = false,
+  }) async {
+    if (fromOrderDetails) {
       _isPaymentLoading = true;
     } else {
       _isLoading = true;
     }
     update();
-    bool isSuccess = await orderServiceInterface.switchToCOD(orderID, guestId: guestId);
+    bool isSuccess = await orderServiceInterface.switchToCOD(
+      orderID,
+      guestId: guestId,
+    );
     _isLoading = false;
     _isPaymentLoading = false;
     update();
@@ -304,14 +372,65 @@ class OrderController extends GetxController implements GetxService {
     return isSuccess;
   }
 
-  void paymentRedirect({required String url, required bool canRedirect, required String? contactNumber,
-    required Function onClose, required final String? addFundUrl, required final String? subscriptionUrl,
-    required final String orderID, int? storeId, required bool createAccount, required String guestId}) {
+  Future<bool> reorderItems(String orderID, {bool replaceCart = true}) async {
+    _isReorderLoading = true;
+    update();
 
+    Response response = await orderServiceInterface.reorder(
+      orderID,
+      replaceCart: replaceCart,
+    );
+    bool isSuccess = response.statusCode == 200;
+
+    if (isSuccess) {
+      CartController cartController = Get.find<CartController>();
+      await cartController.getCartDataOnline();
+      if (cartController.cartList.isNotEmpty &&
+          cartController.cartList[0].item?.moduleId != null) {
+        await cartController.forcefullySetModule(
+          cartController.cartList[0].item!.moduleId!,
+        );
+      }
+      String message = response.body is Map && response.body['message'] != null
+          ? response.body['message']
+          : 'items_added_to_cart'.tr;
+      showCustomSnackBar(message, isError: false);
+      Get.toNamed(RouteHelper.getCartRoute());
+    } else {
+      String message = response.body is Map && response.body['message'] != null
+          ? response.body['message']
+          : response.statusText ?? 'failed_to_reorder'.tr;
+      showCustomSnackBar(message);
+    }
+
+    _isReorderLoading = false;
+    update();
+    return isSuccess;
+  }
+
+  void paymentRedirect({
+    required String url,
+    required bool canRedirect,
+    required String? contactNumber,
+    required Function onClose,
+    required final String? addFundUrl,
+    required final String? subscriptionUrl,
+    required final String orderID,
+    int? storeId,
+    required bool createAccount,
+    required String guestId,
+  }) {
     orderServiceInterface.paymentRedirect(
-      url: url, canRedirect: canRedirect, contactNumber: contactNumber, onClose: onClose,
-      addFundUrl: addFundUrl, subscriptionUrl: subscriptionUrl, orderID: orderID, storeId: storeId,
-      createAccount: createAccount, guestId: guestId,
+      url: url,
+      canRedirect: canRedirect,
+      contactNumber: contactNumber,
+      onClose: onClose,
+      addFundUrl: addFundUrl,
+      subscriptionUrl: subscriptionUrl,
+      orderID: orderID,
+      storeId: storeId,
+      createAccount: createAccount,
+      guestId: guestId,
     );
   }
 
@@ -334,12 +453,19 @@ class OrderController extends GetxController implements GetxService {
     _selectedParcelCancelReason.clear();
   }
 
-  Future<bool> submitParcelReturn({required int orderId, required int returnOtp, String? contactNumber}) async {
-    bool isSuccess = await orderServiceInterface.submitParcelReturn(orderId: orderId, orderStatus: 'returned', returnOtp: returnOtp);
-    if(isSuccess) {
+  Future<bool> submitParcelReturn({
+    required int orderId,
+    required int returnOtp,
+    String? contactNumber,
+  }) async {
+    bool isSuccess = await orderServiceInterface.submitParcelReturn(
+      orderId: orderId,
+      orderStatus: 'returned',
+      returnOtp: returnOtp,
+    );
+    if (isSuccess) {
       trackOrder(orderId.toString(), null, true, contactNumber: contactNumber);
     }
     return isSuccess;
   }
-
 }

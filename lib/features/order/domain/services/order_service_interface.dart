@@ -19,6 +19,7 @@ abstract class OrderServiceInterface {
   OrderModel? prepareOrderModel(PaginatedOrderModel? runningOrderModel, int? orderID);
   Future<bool> switchToCOD(String? orderID, {String? guestId});
   Future<bool> switchToWalletPayment(String? orderID);
+  Future<Response> reorder(String orderID, {bool replaceCart = true});
   void paymentRedirect({required String url, required bool canRedirect, required String? contactNumber,
     required Function onClose, required final String? addFundUrl, required final String? subscriptionUrl,
     required final String orderID, int? storeId, required bool createAccount, required String guestId});

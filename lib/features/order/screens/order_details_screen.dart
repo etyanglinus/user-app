@@ -38,7 +38,14 @@ class OrderDetailsScreen extends StatefulWidget {
   final bool fromNotification;
   final bool fromOfflinePayment;
   final String? contactNumber;
-  const OrderDetailsScreen({super.key, required this.orderModel, required this.orderId, this.fromNotification = false, this.fromOfflinePayment = false, this.contactNumber});
+  const OrderDetailsScreen({
+    super.key,
+    required this.orderModel,
+    required this.orderId,
+    this.fromNotification = false,
+    this.fromOfflinePayment = false,
+    this.contactNumber,
+  });
 
   @override
   OrderDetailsScreenState createState() => OrderDetailsScreenState();
@@ -51,20 +58,41 @@ class OrderDetailsScreenState extends State<OrderDetailsScreen> {
   final ScrollController scrollController = ScrollController();
 
   void _loadData(BuildContext context, bool reload) async {
-    Get.find<OrderController>().getPaymentFailedDetails(widget.orderId.toString());
-    await Get.find<OrderController>().trackOrder(widget.orderId.toString(), reload ? null : widget.orderModel, false, contactNumber: widget.contactNumber).then((value) {
-      if(widget.fromOfflinePayment) {
-        Future.delayed(const Duration(seconds: 2), () => showAnimatedDialog(Get.context!, OfflineSuccessDialog(orderId: widget.orderId)));
-      }
-    });
-    Get.find<OrderController>().timerTrackOrder(widget.orderId.toString(), contactNumber: widget.contactNumber);
+    Get.find<OrderController>().getPaymentFailedDetails(
+      widget.orderId.toString(),
+    );
+    await Get.find<OrderController>()
+        .trackOrder(
+          widget.orderId.toString(),
+          reload ? null : widget.orderModel,
+          false,
+          contactNumber: widget.contactNumber,
+        )
+        .then((value) {
+          if (widget.fromOfflinePayment) {
+            Future.delayed(
+              const Duration(seconds: 2),
+              () => showAnimatedDialog(
+                Get.context!,
+                OfflineSuccessDialog(orderId: widget.orderId),
+              ),
+            );
+          }
+        });
+    Get.find<OrderController>().timerTrackOrder(
+      widget.orderId.toString(),
+      contactNumber: widget.contactNumber,
+    );
     Get.find<OrderController>().getOrderDetails(widget.orderId.toString());
   }
 
-  void _startApiCall(){
+  void _startApiCall() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 10), (timer) async {
-      await Get.find<OrderController>().timerTrackOrder(widget.orderId.toString(), contactNumber: widget.contactNumber);
+      await Get.find<OrderController>().timerTrackOrder(
+        widget.orderId.toString(),
+        contactNumber: widget.contactNumber,
+      );
     });
   }
 
@@ -83,348 +111,639 @@ class OrderDetailsScreenState extends State<OrderDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    
     bool isDesktop = ResponsiveHelper.isDesktop(context);
-    
+
     return PopScope(
       canPop: Navigator.canPop(context),
       onPopInvokedWithResult: (didPop, result) async {
-        if(widget.fromNotification || widget.fromOfflinePayment) {
+        if (widget.fromNotification || widget.fromOfflinePayment) {
           Get.offAllNamed(RouteHelper.getInitialRoute());
         } else {
           return;
         }
       },
-      child: GetBuilder<OrderController>(builder: (orderController) {
-        return Scaffold(
-          appBar: isDesktop ? const WebMenuBar() : AppBar(
-            title: Column(
-              children: [
-                Text(
-                  '${widget.orderModel?.orderType == 'parcel' ? 'parcel'.tr : 'order'.tr} #${widget.orderModel?.id?? widget.orderId}',
-                  style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeLarge, fontWeight: FontWeight.w600, color: Theme.of(context).textTheme.bodyLarge!.color),
-                ),
-              const SizedBox(height: Dimensions.paddingSizeExtraSmall),
-
-              Text(
-                '${'your_order_is'.tr} ${orderController.trackModel?.orderStatus?.tr ?? (widget.orderModel?.orderStatus?.tr ?? '')}',
-                style: robotoRegular.copyWith(
-                  fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: 0.6),
-                ),
-              ),
-              ],
-            ),
-            centerTitle: true,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios),
-              color: Theme.of(context).textTheme.bodyLarge!.color,
-              onPressed: () {
-                if(widget.fromNotification || widget.fromOfflinePayment) {
-                  Get.offAllNamed(RouteHelper.getInitialRoute());
-                } else {
-                  Get.back();
-                }
-              },
-            ),
-            backgroundColor: Theme.of(context).cardColor, surfaceTintColor: Theme.of(context).cardColor,
-            shadowColor: Theme.of(context).disabledColor.withValues(alpha: 0.5), elevation: 2,
-            actions: [const SizedBox()],
-          ),
-          endDrawer: const MenuDrawer(),
-          endDrawerEnableOpenDragGesture: false,
-          floatingActionButton: _ButtonVisibilityHelper.shouldShowTrackDeliveryButton(orderController.trackModel) ? Padding(
-            padding: EdgeInsets.only(bottom: (orderController.trackModel?.orderStatus == 'pending' || widget.orderModel?.orderStatus == 'pending') ? 70 : 20),
-            child: Container(
-              decoration: BoxDecoration(
-                boxShadow: [BoxShadow(color: Colors.black12, spreadRadius: 1, blurRadius: 5)],
-                shape: BoxShape.circle,
-              ),
-              child: FloatingActionButton(
-                onPressed: () async {
-                  _handleTrackOrder(orderController.trackModel!);
-                },
-                backgroundColor: Theme.of(context).cardColor,
-                child: CustomAssetImageWidget(Images.trackLocationIcon, height: 30, width: 30),
-              ),
-            ),
-          ) : const SizedBox(),
-          body: SafeArea(child: GetBuilder<OrderController>(builder: (orderController) {
-            double deliveryCharge = 0;
-            double itemsPrice = 0;
-            double discount = 0;
-            double couponDiscount = 0;
-            double tax = 0;
-            double addOns = 0;
-            double dmTips = 0;
-            double additionalCharge = 0;
-            double extraPackagingCharge = 0;
-            double referrerBonusAmount = 0;
-            OrderModel? order = orderController.trackModel;
-            bool parcel = false;
-            bool prescriptionOrder = false;
-            bool taxIncluded = false;
-            bool ongoing = false;
-            bool showChatPermission = true;
-            if(orderController.orderDetails != null  && order != null) {
-              parcel = order.orderType == 'parcel';
-              prescriptionOrder = order.prescriptionOrder!;
-              deliveryCharge = order.deliveryCharge!;
-              couponDiscount = order.couponDiscountAmount!;
-              discount = order.storeDiscountAmount! + order.flashAdminDiscountAmount! + order.flashStoreDiscountAmount!;
-              tax = order.totalTaxAmount!;
-              dmTips = order.dmTips!;
-              taxIncluded = order.taxStatus!;
-              additionalCharge = order.additionalCharge!;
-              extraPackagingCharge = order.extraPackagingAmount!;
-              referrerBonusAmount = order.referrerBonusAmount!;
-              if(prescriptionOrder) {
-                double orderAmount = order.orderAmount ?? 0;
-                itemsPrice = (orderAmount + discount) - ((taxIncluded ? 0 : tax) + deliveryCharge) - dmTips - additionalCharge;
-              } else{
-                for(OrderDetailsModel orderDetails in orderController.orderDetails!) {
-                  for(AddOn addOn in orderDetails.addOns!) {
-                    addOns = addOns + (addOn.price! * addOn.quantity!);
-                  }
-                  itemsPrice = itemsPrice + (orderDetails.price! * orderDetails.quantity!);
-                }
-              }
-
-              if(!parcel && order.store != null) {
-                for(ZoneData zData in AddressHelper.getUserAddressFromSharedPref()!.zoneData!) {
-                  if(zData.id == order.store!.zoneId){
-                    _isCashOnDeliveryActive = zData.cashOnDelivery;
-                  }
-                  for(Modules m in zData.modules!) {
-                    if(m.id == order.store!.moduleId) {
-                      _maxCodOrderAmount = m.pivot!.maximumCodOrderAmount;
-                      break;
-                    }
-                  }
-                }
-              }
-
-              if (order.store != null) {
-                if (order.store!.storeBusinessModel == 'commission') {
-                  showChatPermission = true;
-                } else if (order.store!.storeSubscription != null && order.store!.storeBusinessModel == 'subscription') {
-                  showChatPermission = order.store!.storeSubscription!.chat == 1;
-                } else {
-                  showChatPermission = false;
-                }
-              } else {
-                showChatPermission = AuthHelper.isLoggedIn();
-              }
-
-              ongoing = (order.orderStatus != 'delivered' && order.orderStatus != 'failed' && order.orderStatus != 'canceled' && order.orderStatus != 'refund_requested'
-              && order.orderStatus != 'refunded' && order.orderStatus != 'refund_request_canceled');
-
-            }
-            double subTotal = itemsPrice + addOns;
-            double total = itemsPrice + addOns - discount + (taxIncluded ? 0 : tax) + deliveryCharge - couponDiscount + dmTips + additionalCharge + extraPackagingCharge - referrerBonusAmount;
-
-            return orderController.orderDetails != null && order != null && orderController.trackModel != null ? Column(children: [
-
-              isDesktop ? Container(
-                height: 64,
-                color: Theme.of(context).primaryColor.withValues(alpha: 0.10),
-                child: Center(child: Text('order_details'.tr, style: robotoMedium)),
-              ) : const SizedBox(),
-
-              Expanded(child: SingleChildScrollView(
-                controller: scrollController,
-                child: FooterView(
-                  child: SizedBox(
-                    width: Dimensions.webMaxWidth,
-                    child: Column(children: [
-                      isDesktop ? Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Expanded(
-                          flex: 6,
-                          child : OrderInfoWidget(
-                            order: order, ongoing: ongoing, parcel: parcel, prescriptionOrder: prescriptionOrder,
-                            timerCancel : () => _timer?.cancel(), startApiCall : () =>  _startApiCall(),
-                            orderController: orderController, showChatPermission: showChatPermission,
+      child: GetBuilder<OrderController>(
+        builder: (orderController) {
+          return Scaffold(
+            appBar: isDesktop
+                ? const WebMenuBar()
+                : AppBar(
+                    title: Column(
+                      children: [
+                        Text(
+                          '${widget.orderModel?.orderType == 'parcel' ? 'parcel'.tr : 'order'.tr} #${widget.orderModel?.id ?? widget.orderId}',
+                          style: robotoMedium.copyWith(
+                            fontSize: Dimensions.fontSizeLarge,
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(context).textTheme.bodyLarge!.color,
                           ),
                         ),
-                        const SizedBox(width: Dimensions.paddingSizeLarge),
+                        const SizedBox(
+                          height: Dimensions.paddingSizeExtraSmall,
+                        ),
 
-                        Expanded(
-                          flex: 4,
-                          child: OrderCalculationWidget(
-                            orderController: orderController, order: order, ongoing: ongoing, parcel: parcel,
-                            prescriptionOrder: prescriptionOrder, deliveryCharge: deliveryCharge, itemsPrice: itemsPrice,
-                            discount: discount, couponDiscount: couponDiscount, tax: tax, addOns: addOns, dmTips: dmTips,
-                            taxIncluded: taxIncluded, subTotal: subTotal, total: total,
-                            bottomView: buildBottomView(orderController, order, parcel, total), extraPackagingAmount: extraPackagingCharge,
-                            referrerBonusAmount: referrerBonusAmount, timerCancel : () => _timer?.cancel(), startApiCall : () =>  _startApiCall(),
+                        Text(
+                          '${'your_order_is'.tr} ${orderController.trackModel?.orderStatus?.tr ?? (widget.orderModel?.orderStatus?.tr ?? '')}',
+                          style: robotoRegular.copyWith(
+                            fontSize: Dimensions.fontSizeSmall,
+                            color: Theme.of(context).textTheme.bodyLarge!.color!
+                                .withValues(alpha: 0.6),
                           ),
                         ),
-                      ]) : const SizedBox(),
-
-                      isDesktop ? const SizedBox() : OrderInfoWidget(
-                        order: order, ongoing: ongoing, parcel: parcel, prescriptionOrder: prescriptionOrder,
-                        timerCancel : () => _timer?.cancel(), startApiCall : () =>  _startApiCall(),
-                        orderController: orderController, showChatPermission: showChatPermission,
-                      ),
-
-                      isDesktop ? const SizedBox() : OrderCalculationWidget(
-                        orderController: orderController, order: order, ongoing: ongoing, parcel: parcel,
-                        prescriptionOrder: prescriptionOrder, deliveryCharge: deliveryCharge, itemsPrice: itemsPrice,
-                        discount: discount, couponDiscount: couponDiscount, tax: tax, addOns: addOns, dmTips: dmTips, taxIncluded: taxIncluded, subTotal: subTotal, total: total,
-                        bottomView:  buildBottomView(orderController, order, parcel, total), extraPackagingAmount: extraPackagingCharge, referrerBonusAmount: referrerBonusAmount,
-                        timerCancel : () => _timer?.cancel(), startApiCall : () =>  _startApiCall(),
-                      ),
-                    ]),
+                      ],
+                    ),
+                    centerTitle: true,
+                    leading: IconButton(
+                      icon: const Icon(Icons.arrow_back_ios),
+                      color: Theme.of(context).textTheme.bodyLarge!.color,
+                      onPressed: () {
+                        if (widget.fromNotification ||
+                            widget.fromOfflinePayment) {
+                          Get.offAllNamed(RouteHelper.getInitialRoute());
+                        } else {
+                          Get.back();
+                        }
+                      },
+                    ),
+                    backgroundColor: Theme.of(context).cardColor,
+                    surfaceTintColor: Theme.of(context).cardColor,
+                    shadowColor: Theme.of(
+                      context,
+                    ).disabledColor.withValues(alpha: 0.5),
+                    elevation: 2,
+                    actions: [const SizedBox()],
                   ),
-                ),
-              )),
+            endDrawer: const MenuDrawer(),
+            endDrawerEnableOpenDragGesture: false,
+            floatingActionButton:
+                _ButtonVisibilityHelper.shouldShowTrackDeliveryButton(
+                  orderController.trackModel,
+                )
+                ? Padding(
+                    padding: EdgeInsets.only(
+                      bottom:
+                          (orderController.trackModel?.orderStatus ==
+                                  'pending' ||
+                              widget.orderModel?.orderStatus == 'pending')
+                          ? 70
+                          : 20,
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            spreadRadius: 1,
+                            blurRadius: 5,
+                          ),
+                        ],
+                        shape: BoxShape.circle,
+                      ),
+                      child: FloatingActionButton(
+                        onPressed: () async {
+                          _handleTrackOrder(orderController.trackModel!);
+                        },
+                        backgroundColor: Theme.of(context).cardColor,
+                        child: CustomAssetImageWidget(
+                          Images.trackLocationIcon,
+                          height: 30,
+                          width: 30,
+                        ),
+                      ),
+                    ),
+                  )
+                : const SizedBox(),
+            body: SafeArea(
+              child: GetBuilder<OrderController>(
+                builder: (orderController) {
+                  double deliveryCharge = 0;
+                  double itemsPrice = 0;
+                  double discount = 0;
+                  double couponDiscount = 0;
+                  double tax = 0;
+                  double addOns = 0;
+                  double dmTips = 0;
+                  double additionalCharge = 0;
+                  double extraPackagingCharge = 0;
+                  double referrerBonusAmount = 0;
+                  OrderModel? order = orderController.trackModel;
+                  bool parcel = false;
+                  bool prescriptionOrder = false;
+                  bool taxIncluded = false;
+                  bool ongoing = false;
+                  bool showChatPermission = true;
+                  if (orderController.orderDetails != null && order != null) {
+                    parcel = order.orderType == 'parcel';
+                    prescriptionOrder = order.prescriptionOrder!;
+                    deliveryCharge = order.deliveryCharge!;
+                    couponDiscount = order.couponDiscountAmount!;
+                    discount =
+                        order.storeDiscountAmount! +
+                        order.flashAdminDiscountAmount! +
+                        order.flashStoreDiscountAmount!;
+                    tax = order.totalTaxAmount!;
+                    dmTips = order.dmTips!;
+                    taxIncluded = order.taxStatus!;
+                    additionalCharge = order.additionalCharge!;
+                    extraPackagingCharge = order.extraPackagingAmount!;
+                    referrerBonusAmount = order.referrerBonusAmount!;
+                    if (prescriptionOrder) {
+                      double orderAmount = order.orderAmount ?? 0;
+                      itemsPrice =
+                          (orderAmount + discount) -
+                          ((taxIncluded ? 0 : tax) + deliveryCharge) -
+                          dmTips -
+                          additionalCharge;
+                    } else {
+                      for (OrderDetailsModel orderDetails
+                          in orderController.orderDetails!) {
+                        for (AddOn addOn in orderDetails.addOns!) {
+                          addOns = addOns + (addOn.price! * addOn.quantity!);
+                        }
+                        itemsPrice =
+                            itemsPrice +
+                            (orderDetails.price! * orderDetails.quantity!);
+                      }
+                    }
 
-              isDesktop ? const SizedBox() : buildBottomView(orderController, order, parcel, total),
+                    if (!parcel && order.store != null) {
+                      for (ZoneData zData
+                          in AddressHelper.getUserAddressFromSharedPref()!
+                              .zoneData!) {
+                        if (zData.id == order.store!.zoneId) {
+                          _isCashOnDeliveryActive = zData.cashOnDelivery;
+                        }
+                        for (Modules m in zData.modules!) {
+                          if (m.id == order.store!.moduleId) {
+                            _maxCodOrderAmount = m.pivot!.maximumCodOrderAmount;
+                            break;
+                          }
+                        }
+                      }
+                    }
 
-            ]) : const Center(child: CircularProgressIndicator());
-          })),
-        );
-      }),
+                    if (order.store != null) {
+                      if (order.store!.storeBusinessModel == 'commission') {
+                        showChatPermission = true;
+                      } else if (order.store!.storeSubscription != null &&
+                          order.store!.storeBusinessModel == 'subscription') {
+                        showChatPermission =
+                            order.store!.storeSubscription!.chat == 1;
+                      } else {
+                        showChatPermission = false;
+                      }
+                    } else {
+                      showChatPermission = AuthHelper.isLoggedIn();
+                    }
+
+                    ongoing =
+                        (order.orderStatus != 'delivered' &&
+                        order.orderStatus != 'failed' &&
+                        order.orderStatus != 'canceled' &&
+                        order.orderStatus != 'refund_requested' &&
+                        order.orderStatus != 'refunded' &&
+                        order.orderStatus != 'refund_request_canceled');
+                  }
+                  double subTotal = itemsPrice + addOns;
+                  double total =
+                      itemsPrice +
+                      addOns -
+                      discount +
+                      (taxIncluded ? 0 : tax) +
+                      deliveryCharge -
+                      couponDiscount +
+                      dmTips +
+                      additionalCharge +
+                      extraPackagingCharge -
+                      referrerBonusAmount;
+
+                  return orderController.orderDetails != null &&
+                          order != null &&
+                          orderController.trackModel != null
+                      ? Column(
+                          children: [
+                            isDesktop
+                                ? Container(
+                                    height: 64,
+                                    color: Theme.of(
+                                      context,
+                                    ).primaryColor.withValues(alpha: 0.10),
+                                    child: Center(
+                                      child: Text(
+                                        'order_details'.tr,
+                                        style: robotoMedium,
+                                      ),
+                                    ),
+                                  )
+                                : const SizedBox(),
+
+                            Expanded(
+                              child: SingleChildScrollView(
+                                controller: scrollController,
+                                child: FooterView(
+                                  child: SizedBox(
+                                    width: Dimensions.webMaxWidth,
+                                    child: Column(
+                                      children: [
+                                        isDesktop
+                                            ? Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Expanded(
+                                                    flex: 6,
+                                                    child: OrderInfoWidget(
+                                                      order: order,
+                                                      ongoing: ongoing,
+                                                      parcel: parcel,
+                                                      prescriptionOrder:
+                                                          prescriptionOrder,
+                                                      timerCancel: () =>
+                                                          _timer?.cancel(),
+                                                      startApiCall: () =>
+                                                          _startApiCall(),
+                                                      orderController:
+                                                          orderController,
+                                                      showChatPermission:
+                                                          showChatPermission,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(
+                                                    width: Dimensions
+                                                        .paddingSizeLarge,
+                                                  ),
+
+                                                  Expanded(
+                                                    flex: 4,
+                                                    child: OrderCalculationWidget(
+                                                      orderController:
+                                                          orderController,
+                                                      order: order,
+                                                      ongoing: ongoing,
+                                                      parcel: parcel,
+                                                      prescriptionOrder:
+                                                          prescriptionOrder,
+                                                      deliveryCharge:
+                                                          deliveryCharge,
+                                                      itemsPrice: itemsPrice,
+                                                      discount: discount,
+                                                      couponDiscount:
+                                                          couponDiscount,
+                                                      tax: tax,
+                                                      addOns: addOns,
+                                                      dmTips: dmTips,
+                                                      taxIncluded: taxIncluded,
+                                                      subTotal: subTotal,
+                                                      total: total,
+                                                      bottomView:
+                                                          buildBottomView(
+                                                            orderController,
+                                                            order,
+                                                            parcel,
+                                                            total,
+                                                          ),
+                                                      extraPackagingAmount:
+                                                          extraPackagingCharge,
+                                                      referrerBonusAmount:
+                                                          referrerBonusAmount,
+                                                      timerCancel: () =>
+                                                          _timer?.cancel(),
+                                                      startApiCall: () =>
+                                                          _startApiCall(),
+                                                    ),
+                                                  ),
+                                                ],
+                                              )
+                                            : const SizedBox(),
+
+                                        isDesktop
+                                            ? const SizedBox()
+                                            : OrderInfoWidget(
+                                                order: order,
+                                                ongoing: ongoing,
+                                                parcel: parcel,
+                                                prescriptionOrder:
+                                                    prescriptionOrder,
+                                                timerCancel: () =>
+                                                    _timer?.cancel(),
+                                                startApiCall: () =>
+                                                    _startApiCall(),
+                                                orderController:
+                                                    orderController,
+                                                showChatPermission:
+                                                    showChatPermission,
+                                              ),
+
+                                        isDesktop
+                                            ? const SizedBox()
+                                            : OrderCalculationWidget(
+                                                orderController:
+                                                    orderController,
+                                                order: order,
+                                                ongoing: ongoing,
+                                                parcel: parcel,
+                                                prescriptionOrder:
+                                                    prescriptionOrder,
+                                                deliveryCharge: deliveryCharge,
+                                                itemsPrice: itemsPrice,
+                                                discount: discount,
+                                                couponDiscount: couponDiscount,
+                                                tax: tax,
+                                                addOns: addOns,
+                                                dmTips: dmTips,
+                                                taxIncluded: taxIncluded,
+                                                subTotal: subTotal,
+                                                total: total,
+                                                bottomView: buildBottomView(
+                                                  orderController,
+                                                  order,
+                                                  parcel,
+                                                  total,
+                                                ),
+                                                extraPackagingAmount:
+                                                    extraPackagingCharge,
+                                                referrerBonusAmount:
+                                                    referrerBonusAmount,
+                                                timerCancel: () =>
+                                                    _timer?.cancel(),
+                                                startApiCall: () =>
+                                                    _startApiCall(),
+                                              ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            isDesktop
+                                ? const SizedBox()
+                                : buildBottomView(
+                                    orderController,
+                                    order,
+                                    parcel,
+                                    total,
+                                  ),
+                          ],
+                        )
+                      : const Center(child: CircularProgressIndicator());
+                },
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
-  Widget buildBottomView(OrderController orderController, OrderModel order, bool parcel, double total) {
-    return parcel ? _buildParcelBottomView(orderController, order, parcel, total) : _buildRegularBottomView(orderController, order, parcel, total);
+  Widget buildBottomView(
+    OrderController orderController,
+    OrderModel order,
+    bool parcel,
+    double total,
+  ) {
+    return parcel
+        ? _buildParcelBottomView(orderController, order, parcel, total)
+        : _buildRegularBottomView(orderController, order, parcel, total);
   }
 
-  Widget _buildRegularBottomView(OrderController orderController, OrderModel order, bool parcel, double totalPrice) {
+  Widget _buildRegularBottomView(
+    OrderController orderController,
+    OrderModel order,
+    bool parcel,
+    double totalPrice,
+  ) {
     final isDesktop = ResponsiveHelper.isDesktop(context);
 
-    final showCancelButton = _ButtonVisibilityHelper.shouldShowCancelButton(order, orderController);
-    final showTrackDeliveryButton = _ButtonVisibilityHelper.shouldShowTrackDeliveryButton(order);
-    final showReviewButton = _ButtonVisibilityHelper.shouldShowReviewButton(order, orderController);
-    final showSwitchToCodButton = _ButtonVisibilityHelper.shouldShowSwitchToCodButton(order, _isCashOnDeliveryActive!);
+    final showCancelButton = _ButtonVisibilityHelper.shouldShowCancelButton(
+      order,
+      orderController,
+    );
+    final showTrackDeliveryButton =
+        _ButtonVisibilityHelper.shouldShowTrackDeliveryButton(order);
+    final showReviewButton = _ButtonVisibilityHelper.shouldShowReviewButton(
+      order,
+      orderController,
+    );
+    final showSwitchToCodButton =
+        _ButtonVisibilityHelper.shouldShowSwitchToCodButton(
+          order,
+          _isCashOnDeliveryActive!,
+        );
+    final showReorderButton = _ButtonVisibilityHelper.shouldShowReorderButton(
+      order,
+      orderController,
+    );
     // final showFailedCodButton = _ButtonVisibilityHelper.shouldShowFailedOrderCodButton(order);
 
-    final showDecoration = showCancelButton || showTrackDeliveryButton || showReviewButton || showSwitchToCodButton;
+    final showDecoration =
+        showCancelButton ||
+        showTrackDeliveryButton ||
+        showReviewButton ||
+        showSwitchToCodButton ||
+        showReorderButton;
 
     return Container(
-      padding: EdgeInsets.all(!isDesktop && showDecoration ? Dimensions.paddingSizeDefault : 0),
-      decoration: !isDesktop && showDecoration ? BoxDecoration(
-        color: Theme.of(context).cardColor,
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 5, spreadRadius: 1)],
-      ) : null,
-      child: Column(children: [
-        if (!orderController.showCancelled) ...[
-          _buildActionButtonsRow(
-            showCancelButton: showCancelButton,
-            showTrackDeliveryButton: false,
-            isDesktop: isDesktop,
-            order: order,
-            parcel: parcel,
-            onCancelPressed: () => _handleCancelOrder(orderController, order),
-            onTrackPressed: () => _handleTrackOrder(order),
-          ),
+      padding: EdgeInsets.all(
+        !isDesktop && showDecoration ? Dimensions.paddingSizeDefault : 0,
+      ),
+      decoration: !isDesktop && showDecoration
+          ? BoxDecoration(
+              color: Theme.of(context).cardColor,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 5,
+                  spreadRadius: 1,
+                ),
+              ],
+            )
+          : null,
+      child: Column(
+        children: [
+          if (!orderController.showCancelled) ...[
+            _buildActionButtonsRow(
+              showCancelButton: showCancelButton,
+              showTrackDeliveryButton: false,
+              isDesktop: isDesktop,
+              order: order,
+              parcel: parcel,
+              onCancelPressed: () => _handleCancelOrder(orderController, order),
+              onTrackPressed: () => _handleTrackOrder(order),
+            ),
 
-          // if (showSwitchToCodButton)
-          //   _buildSwitchToCodButton(orderController, order, parcel, totalPrice),
-        ] else
-          _buildCancelledOrderWidget(isDesktop),
+            // if (showSwitchToCodButton)
+            //   _buildSwitchToCodButton(orderController, order, parcel, totalPrice),
+          ] else
+            _buildCancelledOrderWidget(isDesktop),
 
-        if (showReviewButton)
-          _buildReviewButton(orderController, order),
+          if (showReviewButton) _buildReviewButton(orderController, order),
 
-        // if (showFailedCodButton)
-        //   _buildFailedOrderCodButton(orderController, order),
-      ]),
+          if (showReorderButton) _buildReorderButton(orderController, order),
+
+          // if (showFailedCodButton)
+          //   _buildFailedOrderCodButton(orderController, order),
+        ],
+      ),
     );
   }
 
   // Refactored parcel bottom view
-  Widget _buildParcelBottomView(OrderController orderController, OrderModel order, bool parcel, double totalPrice) {
+  Widget _buildParcelBottomView(
+    OrderController orderController,
+    OrderModel order,
+    bool parcel,
+    double totalPrice,
+  ) {
     final isDesktop = ResponsiveHelper.isDesktop(context);
 
-    final showCancelButton = _ButtonVisibilityHelper.shouldShowParcelCancelButton(order, orderController);
-    final showTrackDeliveryButton = _ButtonVisibilityHelper.shouldShowParcelTrackButton(order);
-    final showReturnOtp = _ButtonVisibilityHelper.shouldShowParcelReturnOtp(order);
-    final showReviewButton = _ButtonVisibilityHelper.shouldShowParcelReviewButton(order);
-    final showSwitchToCodButton = _ButtonVisibilityHelper.shouldShowSwitchToCodButton(order, _isCashOnDeliveryActive!);
+    final showCancelButton =
+        _ButtonVisibilityHelper.shouldShowParcelCancelButton(
+          order,
+          orderController,
+        );
+    final showTrackDeliveryButton =
+        _ButtonVisibilityHelper.shouldShowParcelTrackButton(order);
+    final showReturnOtp = _ButtonVisibilityHelper.shouldShowParcelReturnOtp(
+      order,
+    );
+    final showReviewButton =
+        _ButtonVisibilityHelper.shouldShowParcelReviewButton(order);
+    final showSwitchToCodButton =
+        _ButtonVisibilityHelper.shouldShowSwitchToCodButton(
+          order,
+          _isCashOnDeliveryActive!,
+        );
     // final showFailedCodButton = _ButtonVisibilityHelper.shouldShowFailedOrderCodButton(order);
 
-    final showDecoration = showCancelButton || showTrackDeliveryButton || showReturnOtp || showReviewButton || showSwitchToCodButton;
+    final showDecoration =
+        showCancelButton ||
+        showTrackDeliveryButton ||
+        showReturnOtp ||
+        showReviewButton ||
+        showSwitchToCodButton;
 
     return Container(
-      padding: EdgeInsets.all(!isDesktop && showDecoration ? Dimensions.paddingSizeDefault : 0),
-      decoration: !isDesktop && showDecoration ? BoxDecoration(
-        color: Theme.of(context).cardColor,
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 5, spreadRadius: 1)],
-      ) : null,
-      child: Column(children: [
-        if (!orderController.showCancelled) ...[
-          _buildParcelActionButtonsRow(
-            showCancelButton: showCancelButton,
-            showTrackDeliveryButton: showTrackDeliveryButton,
-            order: order,
-            parcel: parcel,
-            isDesktop: isDesktop,
-            onCancelPressed: () => _handleParcelCancel(orderController, order, isDesktop),
-            onTrackPressed: () => _handleTrackOrder(order),
-          ),
+      padding: EdgeInsets.all(
+        !isDesktop && showDecoration ? Dimensions.paddingSizeDefault : 0,
+      ),
+      decoration: !isDesktop && showDecoration
+          ? BoxDecoration(
+              color: Theme.of(context).cardColor,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 5,
+                  spreadRadius: 1,
+                ),
+              ],
+            )
+          : null,
+      child: Column(
+        children: [
+          if (!orderController.showCancelled) ...[
+            _buildParcelActionButtonsRow(
+              showCancelButton: showCancelButton,
+              showTrackDeliveryButton: showTrackDeliveryButton,
+              order: order,
+              parcel: parcel,
+              isDesktop: isDesktop,
+              onCancelPressed: () =>
+                  _handleParcelCancel(orderController, order, isDesktop),
+              onTrackPressed: () => _handleTrackOrder(order),
+            ),
 
-          if (_ButtonVisibilityHelper.shouldShowSwitchToCodButton(order, _isCashOnDeliveryActive!))
-            _buildSwitchToCodButton(orderController, order, parcel, totalPrice),
-        ] else
-          _buildCancelledOrderWidget(isDesktop),
+            if (_ButtonVisibilityHelper.shouldShowSwitchToCodButton(
+              order,
+              _isCashOnDeliveryActive!,
+            ))
+              _buildSwitchToCodButton(
+                orderController,
+                order,
+                parcel,
+                totalPrice,
+              ),
+          ] else
+            _buildCancelledOrderWidget(isDesktop),
 
-        if (showReturnOtp) ...[
-          _buildParcelReturnOtpDisplay(order),
-          SizedBox(height: Dimensions.paddingSizeSmall),
+          if (showReturnOtp) ...[
+            _buildParcelReturnOtpDisplay(order),
+            SizedBox(height: Dimensions.paddingSizeSmall),
 
-          _buildParcelReturnSlider(orderController, order),
+            _buildParcelReturnSlider(orderController, order),
+          ],
+
+          if (showReviewButton) _buildReviewButton(orderController, order),
+
+          // if (showFailedCodButton)
+          //   _buildFailedOrderCodButton(orderController, order),
         ],
-
-        if (showReviewButton)
-          _buildReviewButton(orderController, order),
-
-        // if (showFailedCodButton)
-        //   _buildFailedOrderCodButton(orderController, order),
-      ]),
+      ),
     );
   }
 
-  Widget _buildActionButtonsRow({required bool showCancelButton, required bool showTrackDeliveryButton, required bool isDesktop, required OrderModel order,
-    required bool parcel, required VoidCallback onCancelPressed, required VoidCallback onTrackPressed}) {
-    return Row(children: [
-      if (showCancelButton)
-        Expanded(
-          child: CustomButton(
-            color: Colors.red.withValues(alpha: 0.1),
-            onPressed: onCancelPressed,
-            buttonText: parcel ? 'cancel_delivery'.tr : 'cancel_order'.tr,
-            textColor: Colors.red,
+  Widget _buildActionButtonsRow({
+    required bool showCancelButton,
+    required bool showTrackDeliveryButton,
+    required bool isDesktop,
+    required OrderModel order,
+    required bool parcel,
+    required VoidCallback onCancelPressed,
+    required VoidCallback onTrackPressed,
+  }) {
+    return Row(
+      children: [
+        if (showCancelButton)
+          Expanded(
+            child: CustomButton(
+              color: Colors.red.withValues(alpha: 0.1),
+              onPressed: onCancelPressed,
+              buttonText: parcel ? 'cancel_delivery'.tr : 'cancel_order'.tr,
+              textColor: Colors.red,
+            ),
           ),
-        ),
-    ]);
+      ],
+    );
   }
 
-  Widget _buildParcelActionButtonsRow({required bool showCancelButton, required bool showTrackDeliveryButton, required OrderModel order, required bool parcel,
-    required bool isDesktop, required VoidCallback onCancelPressed, required VoidCallback onTrackPressed}) {
-    return Row(children: [
-      if (showCancelButton)
-        Expanded(
-          child: CustomButton(
-            color: Colors.red.withValues(alpha: 0.1),
-            onPressed: onCancelPressed,
-            buttonText: 'cancel_delivery'.tr,
-            textColor: Colors.red,
+  Widget _buildParcelActionButtonsRow({
+    required bool showCancelButton,
+    required bool showTrackDeliveryButton,
+    required OrderModel order,
+    required bool parcel,
+    required bool isDesktop,
+    required VoidCallback onCancelPressed,
+    required VoidCallback onTrackPressed,
+  }) {
+    return Row(
+      children: [
+        if (showCancelButton)
+          Expanded(
+            child: CustomButton(
+              color: Colors.red.withValues(alpha: 0.1),
+              onPressed: onCancelPressed,
+              buttonText: 'cancel_delivery'.tr,
+              textColor: Colors.red,
+            ),
           ),
-        ),
-
-    ]);
+      ],
+    );
   }
 
-  Widget _buildSwitchToCodButton(OrderController orderController, OrderModel order, bool parcel, double totalPrice) {
+  Widget _buildSwitchToCodButton(
+    OrderController orderController,
+    OrderModel order,
+    bool parcel,
+    double totalPrice,
+  ) {
     return CustomButton(
       buttonText: 'switch_to_cod'.tr,
       margin: const EdgeInsets.symmetric(
         horizontal: Dimensions.paddingSizeDefault,
         vertical: Dimensions.paddingSizeSmall,
       ),
-      onPressed: () => _handleSwitchToCod(orderController, order, parcel, totalPrice),
+      onPressed: () =>
+          _handleSwitchToCod(orderController, order, parcel, totalPrice),
     );
   }
 
@@ -433,10 +752,12 @@ class OrderDetailsScreenState extends State<OrderDetailsScreen> {
       child: Container(
         width: Dimensions.webMaxWidth,
         height: 50,
-        margin: isDesktop ? null : const EdgeInsets.symmetric(
-          horizontal: Dimensions.paddingSizeDefault,
-          vertical: Dimensions.paddingSizeSmall,
-        ),
+        margin: isDesktop
+            ? null
+            : const EdgeInsets.symmetric(
+                horizontal: Dimensions.paddingSizeDefault,
+                vertical: Dimensions.paddingSizeSmall,
+              ),
         alignment: Alignment.center,
         decoration: BoxDecoration(
           border: Border.all(width: 2, color: Theme.of(context).primaryColor),
@@ -457,6 +778,21 @@ class OrderDetailsScreenState extends State<OrderDetailsScreen> {
     );
   }
 
+  Widget _buildReorderButton(
+    OrderController orderController,
+    OrderModel order,
+  ) {
+    return CustomButton(
+      buttonText: 'reorder'.tr,
+      isLoading: orderController.isReorderLoading,
+      margin: const EdgeInsets.symmetric(
+        horizontal: Dimensions.paddingSizeDefault,
+        vertical: Dimensions.paddingSizeSmall,
+      ),
+      onPressed: () => _handleReorder(orderController, order),
+    );
+  }
+
   // Widget _buildFailedOrderCodButton(OrderController orderController, OrderModel order) {
   //   return CustomButton(
   //     buttonText: 'switch_to_cash_on_delivery'.tr,
@@ -465,42 +801,58 @@ class OrderDetailsScreenState extends State<OrderDetailsScreen> {
   // }
 
   Widget _buildParcelReturnOtpDisplay(OrderModel order) {
-    return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-      Text(
-        'parcel_returned_otp'.tr,
-        style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall),
-      ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          'parcel_returned_otp'.tr,
+          style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall),
+        ),
 
-      Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).disabledColor.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: Dimensions.paddingSizeExtraSmall,
-            vertical: 2,
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).disabledColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
           ),
-          child: Text(
-            order.parcelCancellation!.returnOtp.toString(),
-            style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: Dimensions.paddingSizeExtraSmall,
+              vertical: 2,
+            ),
+            child: Text(
+              order.parcelCancellation!.returnOtp.toString(),
+              style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge),
+            ),
           ),
         ),
-      ),
-    ]);
+      ],
+    );
   }
 
-  Widget _buildParcelReturnSlider(OrderController orderController, OrderModel order) {
+  Widget _buildParcelReturnSlider(
+    OrderController orderController,
+    OrderModel order,
+  ) {
     return SliderButton(
       label: Text(
         'parcel_received'.tr,
-        style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeLarge, color: Theme.of(context).primaryColor),
+        style: robotoMedium.copyWith(
+          fontSize: Dimensions.fontSizeLarge,
+          color: Theme.of(context).primaryColor,
+        ),
       ),
-      dismissThresholds: 0.5, dismissible: false, shimmer: true, width: 1170,
-      height: 60, buttonSize: 50, radius: 10,
+      dismissThresholds: 0.5,
+      dismissible: false,
+      shimmer: true,
+      width: 1170,
+      height: 60,
+      buttonSize: 50,
+      radius: 10,
       icon: Center(
         child: Icon(
-          Get.find<LocalizationController>().isLtr ? Icons.double_arrow_sharp : Icons.keyboard_arrow_left,
+          Get.find<LocalizationController>().isLtr
+              ? Icons.double_arrow_sharp
+              : Icons.keyboard_arrow_left,
           color: Colors.white,
           size: 20.0,
         ),
@@ -526,14 +878,24 @@ class OrderDetailsScreenState extends State<OrderDetailsScreen> {
 
   void _handleCancelOrder(OrderController orderController, OrderModel order) {
     orderController.setOrderCancelReason('');
-    Get.dialog(CancellationDialogueWidget(
-      orderId: order.id,
-      contactNumber: widget.contactNumber,
-    ));
+    Get.dialog(
+      CancellationDialogueWidget(
+        orderId: order.id,
+        contactNumber: widget.contactNumber,
+      ),
+    );
   }
 
-  void _handleParcelCancel(OrderController orderController, OrderModel order, bool isDesktop) {
-    final isBeforePickup = ['pending', 'accepted', 'confirmed'].contains(order.orderStatus);
+  void _handleParcelCancel(
+    OrderController orderController,
+    OrderModel order,
+    bool isDesktop,
+  ) {
+    final isBeforePickup = [
+      'pending',
+      'accepted',
+      'confirmed',
+    ].contains(order.orderStatus);
     final cancellationSheet = CancellationReasonBottomSheet(
       isBeforePickup: isBeforePickup,
       orderId: order.id,
@@ -544,12 +906,16 @@ class OrderDetailsScreenState extends State<OrderDetailsScreen> {
     );
 
     if (isDesktop) {
-      Get.dialog(Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Dimensions.radiusSmall)),
-        insetPadding: const EdgeInsets.all(20),
-        clipBehavior: Clip.antiAliasWithSaveLayer,
-        child: cancellationSheet,
-      ));
+      Get.dialog(
+        Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
+          ),
+          insetPadding: const EdgeInsets.all(20),
+          clipBehavior: Clip.antiAliasWithSaveLayer,
+          child: cancellationSheet,
+        ),
+      );
     } else {
       showCustomBottomSheet(child: cancellationSheet);
     }
@@ -557,25 +923,35 @@ class OrderDetailsScreenState extends State<OrderDetailsScreen> {
 
   Future<void> _handleTrackOrder(OrderModel order) async {
     _timer?.cancel();
-    await Get.toNamed(RouteHelper.getOrderTrackingRoute(order.id, widget.contactNumber))?.whenComplete(() => _startApiCall());
+    await Get.toNamed(
+      RouteHelper.getOrderTrackingRoute(order.id, widget.contactNumber),
+    )?.whenComplete(() => _startApiCall());
   }
 
-  void _handleSwitchToCod(OrderController orderController, OrderModel order, bool parcel, double totalPrice) {
-    Get.dialog(ConfirmationDialog(
-      icon: Images.warning,
-      description: 'are_you_sure_to_switch'.tr,
-      onYesPressed: () {
-        final canSwitchToCod = _canSwitchToCashOnDelivery(parcel, totalPrice);
+  void _handleSwitchToCod(
+    OrderController orderController,
+    OrderModel order,
+    bool parcel,
+    double totalPrice,
+  ) {
+    Get.dialog(
+      ConfirmationDialog(
+        icon: Images.warning,
+        description: 'are_you_sure_to_switch'.tr,
+        onYesPressed: () {
+          final canSwitchToCod = _canSwitchToCashOnDelivery(parcel, totalPrice);
 
-        if (canSwitchToCod) {
-          orderController.switchToCOD(order.id.toString());
-        } else {
-          if (Get.isDialogOpen!) Get.back();
-             showCustomSnackBar('${'you_cant_order_more_then'.tr} ${PriceConverter.convertPrice(_maxCodOrderAmount)} ${'in_cash_on_delivery'.tr}'
-          );
-        }
-      },
-    ));
+          if (canSwitchToCod) {
+            orderController.switchToCOD(order.id.toString());
+          } else {
+            if (Get.isDialogOpen!) Get.back();
+            showCustomSnackBar(
+              '${'you_cant_order_more_then'.tr} ${PriceConverter.convertPrice(_maxCodOrderAmount)} ${'in_cash_on_delivery'.tr}',
+            );
+          }
+        },
+      ),
+    );
   }
 
   void _handleReviewButton(OrderController orderController, OrderModel order) {
@@ -589,12 +965,19 @@ class OrderDetailsScreenState extends State<OrderDetailsScreen> {
       }
     }
 
-    Get.toNamed(RouteHelper.getReviewRoute(), arguments: RateReviewScreen(
-      orderDetailsList: orderDetailsList,
-      deliveryMan: order.deliveryMan,
-      orderID: order.id,
-      reviews: order.reviews,
-    ));
+    Get.toNamed(
+      RouteHelper.getReviewRoute(),
+      arguments: RateReviewScreen(
+        orderDetailsList: orderDetailsList,
+        deliveryMan: order.deliveryMan,
+        orderID: order.id,
+        reviews: order.reviews,
+      ),
+    );
+  }
+
+  void _handleReorder(OrderController orderController, OrderModel order) {
+    orderController.reorderItems(order.id.toString());
   }
 
   // void _handleFailedOrderCod(OrderController orderController, OrderModel order) {
@@ -613,73 +996,123 @@ class OrderDetailsScreenState extends State<OrderDetailsScreen> {
   bool _canSwitchToCashOnDelivery(bool parcel, double totalPrice) {
     if (parcel) return true;
 
-    return (_maxCodOrderAmount != null && totalPrice < _maxCodOrderAmount!) || _maxCodOrderAmount == null || _maxCodOrderAmount == 0;
+    return (_maxCodOrderAmount != null && totalPrice < _maxCodOrderAmount!) ||
+        _maxCodOrderAmount == null ||
+        _maxCodOrderAmount == 0;
   }
 }
 
-
 class _ButtonVisibilityHelper {
-  static bool shouldShowCancelButton(OrderModel order, OrderController orderController) {
+  static bool shouldShowCancelButton(
+    OrderModel order,
+    OrderController orderController,
+  ) {
     final isUserLoggedIn = Get.find<AuthController>().isLoggedIn();
-    final hasGuestOrderDetails = orderController.orderDetails != null && orderController.orderDetails!.isNotEmpty && orderController.orderDetails![0].isGuest == 1;
+    final hasGuestOrderDetails =
+        orderController.orderDetails != null &&
+        orderController.orderDetails!.isNotEmpty &&
+        orderController.orderDetails![0].isGuest == 1;
 
     final canCancel = isUserLoggedIn || hasGuestOrderDetails;
 
-    return (order.orderStatus == 'pending' || order.orderStatus == 'failed') && canCancel;
+    return (order.orderStatus == 'pending' || order.orderStatus == 'failed') &&
+        canCancel;
   }
 
-  static bool shouldShowParcelCancelButton(OrderModel order, OrderController orderController) {
+  static bool shouldShowParcelCancelButton(
+    OrderModel order,
+    OrderController orderController,
+  ) {
     final isUserLoggedIn = Get.find<AuthController>().isLoggedIn();
     final isGuestLoggedIn = Get.find<AuthController>().isGuestLoggedIn();
-    final hasGuestOrderDetails = orderController.orderDetails != null && orderController.orderDetails!.isNotEmpty && orderController.orderDetails![0].isGuest == 1;
+    final hasGuestOrderDetails =
+        orderController.orderDetails != null &&
+        orderController.orderDetails!.isNotEmpty &&
+        orderController.orderDetails![0].isGuest == 1;
 
     final canCancel = isUserLoggedIn || hasGuestOrderDetails;
-    final cancellableStatuses = ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up', 'failed'];
+    final cancellableStatuses = [
+      'pending',
+      'accepted',
+      'confirmed',
+      'processing',
+      'handover',
+      'picked_up',
+      'failed',
+    ];
 
-    if(isGuestLoggedIn){
-      return (order.orderStatus == 'pending' || order.orderStatus == 'failed') && canCancel;
-    }else{
+    if (isGuestLoggedIn) {
+      return (order.orderStatus == 'pending' ||
+              order.orderStatus == 'failed') &&
+          canCancel;
+    } else {
       return cancellableStatuses.contains(order.orderStatus) && canCancel;
     }
   }
 
   static bool shouldShowTrackDeliveryButton(OrderModel? order) {
-    if(order == null) {
+    if (order == null) {
       return false;
     }
-    final trackableStatuses = ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'];
-    final isPendingWithoutDigitalPayment = order.orderStatus == 'pending' && order.paymentMethod != 'digital_payment';
+    final trackableStatuses = [
+      'pending',
+      'accepted',
+      'confirmed',
+      'processing',
+      'handover',
+      'picked_up',
+    ];
+    final isPendingWithoutDigitalPayment =
+        order.orderStatus == 'pending' &&
+        order.paymentMethod != 'digital_payment';
 
-    return isPendingWithoutDigitalPayment || trackableStatuses.contains(order.orderStatus);
+    return isPendingWithoutDigitalPayment ||
+        trackableStatuses.contains(order.orderStatus);
   }
 
   static bool shouldShowParcelTrackButton(OrderModel order) {
-    final trackableStatuses = ['pending', 'accepted', 'confirmed', 'processing', 'handover', 'picked_up'];
+    final trackableStatuses = [
+      'pending',
+      'accepted',
+      'confirmed',
+      'processing',
+      'handover',
+      'picked_up',
+    ];
     return trackableStatuses.contains(order.orderStatus);
   }
 
-  static bool shouldShowReviewButton(OrderModel order, OrderController orderController) {
+  static bool shouldShowReviewButton(
+    OrderModel order,
+    OrderController orderController,
+  ) {
     if (AuthHelper.isGuestLoggedIn()) return false;
     if (order.orderStatus != 'delivered') return false;
 
-    return orderController.orderDetails!.isNotEmpty && orderController.orderDetails![0].itemCampaignId == null && canReviews(order.reviews, orderController);
+    return orderController.orderDetails!.isNotEmpty &&
+        orderController.orderDetails![0].itemCampaignId == null &&
+        canReviews(order.reviews, orderController);
   }
 
   static bool shouldShowParcelReviewButton(OrderModel order) {
     if (AuthHelper.isGuestLoggedIn()) return false;
 
-    final canReview = order.orderStatus == 'delivered' || order.orderStatus == 'returned';
+    final canReview =
+        order.orderStatus == 'delivered' || order.orderStatus == 'returned';
     if (!canReview) return false;
 
     return order.deliveryMan != null;
   }
 
-  static bool canReviews(List<Reviews>? reviews, OrderController orderController) {
-    if(AuthHelper.isLoggedIn()) {
-      if(reviews != null && reviews.isNotEmpty){
+  static bool canReviews(
+    List<Reviews>? reviews,
+    OrderController orderController,
+  ) {
+    if (AuthHelper.isLoggedIn()) {
+      if (reviews != null && reviews.isNotEmpty) {
         for (int i = 0; i < orderController.orderDetails!.length; i++) {
-          for(int j = 0; j < reviews.length; j++) {
-            if(orderController.orderDetails![i].itemId == reviews[j].itemId) {
+          for (int j = 0; j < reviews.length; j++) {
+            if (orderController.orderDetails![i].itemId == reviews[j].itemId) {
               return false;
             }
           }
@@ -689,12 +1122,43 @@ class _ButtonVisibilityHelper {
     return true;
   }
 
-  static bool shouldShowSwitchToCodButton(OrderModel order, bool isCashOnDeliveryActive) {
-    return order.orderStatus == 'pending' && order.paymentStatus == 'unpaid' && order.paymentMethod == 'digital_payment' && isCashOnDeliveryActive;
+  static bool shouldShowSwitchToCodButton(
+    OrderModel order,
+    bool isCashOnDeliveryActive,
+  ) {
+    return order.orderStatus == 'pending' &&
+        order.paymentStatus == 'unpaid' &&
+        order.paymentMethod == 'digital_payment' &&
+        isCashOnDeliveryActive;
+  }
+
+  static bool shouldShowReorderButton(
+    OrderModel order,
+    OrderController orderController,
+  ) {
+    if (AuthHelper.isGuestLoggedIn()) return false;
+    if (order.orderType == 'parcel' || order.prescriptionOrder == true) {
+      return false;
+    }
+    if (orderController.orderDetails == null ||
+        orderController.orderDetails!.isEmpty) {
+      return false;
+    }
+
+    return orderController.orderDetails![0].itemCampaignId == null &&
+        [
+          'delivered',
+          'canceled',
+          'failed',
+          'refunded',
+        ].contains(order.orderStatus);
   }
 
   static bool shouldShowParcelReturnOtp(OrderModel order) {
-    return order.orderStatus != 'returned' && order.parcelCancellation != null && order.parcelCancellation!.beforePickup == 0 && order.parcelCancellation!.returnOtp != null;
+    return order.orderStatus != 'returned' &&
+        order.parcelCancellation != null &&
+        order.parcelCancellation!.beforePickup == 0 &&
+        order.parcelCancellation!.returnOtp != null;
   }
 
   // static bool shouldShowFailedOrderCodButton(OrderModel order) {

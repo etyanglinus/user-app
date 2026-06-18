@@ -14,6 +14,7 @@ abstract class OrderRepositoryInterface extends RepositoryInterface {
   Future<bool> cancelOrder({required String orderID, String? reason, String? guestId, required bool isParcel, List<String>? reasons, String? comment});
   Future<Response> switchToCOD(String? orderID, {String? guestId});
   Future<Response> switchToWalletPayment(String? orderID);
+  Future<Response> reorder(String orderID, {bool replaceCart = true});
   Future<bool> submitParcelReturn({required int orderId, required String orderStatus, required int returnOtp});
   Future<PaymentModel?> getPaymentFailedDetails(String? orderID);
   Future<OngoingOrderModel?> getDashboardOrders();

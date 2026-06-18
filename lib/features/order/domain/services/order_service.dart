@@ -131,6 +131,11 @@ class OrderService implements OrderServiceInterface {
   }
 
   @override
+  Future<Response> reorder(String orderID, {bool replaceCart = true}) async {
+    return await orderRepositoryInterface.reorder(orderID, replaceCart: replaceCart);
+  }
+
+  @override
   void paymentRedirect({required String url, required bool canRedirect, required String? contactNumber,
     required Function onClose, required final String? addFundUrl, required final String? subscriptionUrl,
     required final String orderID, int? storeId, required bool createAccount, required String guestId}) {
