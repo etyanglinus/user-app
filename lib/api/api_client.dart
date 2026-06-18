@@ -37,7 +37,7 @@ class ApiClient extends GetxService {
       addressModel = AddressModel.fromJson(jsonDecode(sharedPreferences.getString(AppConstants.userAddress)!));
     } catch (_) {}
     int? moduleID;
-    if (GetPlatform.isWeb && sharedPreferences.containsKey(AppConstants.moduleId)) {
+    if (sharedPreferences.containsKey(AppConstants.moduleId)) {
       try {
         moduleID = ModuleModel.fromJson(jsonDecode(sharedPreferences.getString(AppConstants.moduleId)!)).id;
       } catch (_) {}
