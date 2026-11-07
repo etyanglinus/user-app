@@ -19,6 +19,7 @@ import 'package:fasta_deliveries/helper/responsive_helper.dart';
 import 'package:fasta_deliveries/helper/route_helper.dart';
 import 'package:fasta_deliveries/util/app_constants.dart';
 import 'package:fasta_deliveries/common/widgets/custom_snackbar.dart';
+import 'package:fasta_deliveries/common/widgets/adaptive_map/adaptive_map.dart';
 
 class LocationService implements LocationServiceInterface{
   final LocationRepositoryInterface locationRepoInterface;
@@ -52,7 +53,7 @@ class LocationService implements LocationServiceInterface{
   }
 
   @override
-  void handleMapAnimation(GoogleMapController? mapController, Position myPosition) {
+  void handleMapAnimation(AdaptiveMapController? mapController, Position myPosition) {
     if (mapController != null) {
       mapController.animateCamera(CameraUpdate.newCameraPosition(
         CameraPosition(target: LatLng(myPosition.latitude, myPosition.longitude), zoom: 17),
@@ -167,7 +168,7 @@ class LocationService implements LocationServiceInterface{
   }
 
   @override
-  Future<void> authorizeNavigation(String page, List<AddressModel>? addressList, GoogleMapController? mapController, {bool offNamed = false, bool offAll = false}) async {
+  Future<void> authorizeNavigation(String page, List<AddressModel>? addressList, AdaptiveMapController? mapController, {bool offNamed = false, bool offAll = false}) async {
     if(addressList != null && addressList.isEmpty) {
       if(ResponsiveHelper.isDesktop(Get.context)) {
         showGeneralDialog(context: Get.context!, pageBuilder: (_,_,_) {
@@ -191,7 +192,7 @@ class LocationService implements LocationServiceInterface{
   }
 
   @override
-  void defaultNavigation(String page, GoogleMapController? mapController) {
+  void defaultNavigation(String page, AdaptiveMapController? mapController) {
     if(ResponsiveHelper.isDesktop(Get.context)) {
       showGeneralDialog(context: Get.context!, pageBuilder: (_,_,_) {
         return SizedBox(

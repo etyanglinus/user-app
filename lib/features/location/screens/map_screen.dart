@@ -18,6 +18,7 @@ import 'package:get/get.dart';
 import 'package:fasta_deliveries/common/widgets/menu_drawer.dart';
 import 'package:fasta_deliveries/features/order/widgets/address_details_widget.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:fasta_deliveries/common/widgets/adaptive_map/adaptive_map.dart';
 
 class MapScreen extends StatefulWidget {
   final AddressModel address;
@@ -33,7 +34,7 @@ class MapScreen extends StatefulWidget {
 class MapScreenState extends State<MapScreen> {
   late LatLng _latLng;
   Set<Marker> _markers = {};
-  GoogleMapController? _mapController;
+  AdaptiveMapController? _mapController;
   bool isHovered = false;
 
   @override
@@ -67,7 +68,7 @@ class MapScreenState extends State<MapScreen> {
                 MouseRegion(
                   onEnter: (event) => onEntered(true),
                   onExit: (event) => onEntered(false),
-                  child: GoogleMap(
+                  child: AdaptiveMap(
                     initialCameraPosition: CameraPosition(target: _latLng, zoom: 16),
                     minMaxZoomPreference: const MinMaxZoomPreference(0, 16),
                     zoomGesturesEnabled: true,
@@ -295,7 +296,7 @@ class MapScreenState extends State<MapScreen> {
     }
   }
 
-  Future<void> zoomToFit(GoogleMapController? controller, LatLngBounds? bounds, LatLng centerBounds, {double padding = 0.5}) async {
+  Future<void> zoomToFit(AdaptiveMapController? controller, LatLngBounds? bounds, LatLng centerBounds, {double padding = 0.5}) async {
     bool keepZoomingOut = true;
 
     while(keepZoomingOut) {

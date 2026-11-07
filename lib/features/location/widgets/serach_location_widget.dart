@@ -5,9 +5,10 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:fasta_deliveries/features/location/widgets/location_search_dialog_widget.dart';
 import 'package:fasta_deliveries/util/dimensions.dart';
 import 'package:fasta_deliveries/util/styles.dart';
+import 'package:fasta_deliveries/common/widgets/adaptive_map/adaptive_map.dart';
 
 class SearchLocationWidget extends StatelessWidget {
-  final GoogleMapController? mapController;
+  final AdaptiveMapController? mapController;
   final String? pickedAddress;
   final bool? isEnabled;
   final bool? isPickedUp;

@@ -26,12 +26,13 @@ import 'package:fasta_deliveries/util/app_constants.dart';
 import 'package:fasta_deliveries/util/dimensions.dart';
 import 'package:fasta_deliveries/util/images.dart';
 import 'package:fasta_deliveries/util/styles.dart';
+import 'package:fasta_deliveries/common/widgets/adaptive_map/adaptive_map.dart';
 
 class SelectLocationViewWidget extends StatefulWidget {
   final bool fromView;
   final bool mapView;
   final bool zoneModuleView;
-  final GoogleMapController? mapController;
+  final AdaptiveMapController? mapController;
   final TextEditingController? addressController;
   final FocusNode? addressFocus;
   final bool inDialog;
@@ -46,7 +47,7 @@ class _SelectLocationViewWidgetState extends State<SelectLocationViewWidget> {
 
   late CameraPosition _cameraPosition;
   Set<Polygon> _polygons = {};
-  GoogleMapController? _mapController;
+  AdaptiveMapController? _mapController;
   bool isSelected = false;
   bool _isSettingPolygon = false;
   bool _hasUserInteractedWithMap = false; // Track if user has moved the map
@@ -238,7 +239,7 @@ class _SelectLocationViewWidgetState extends State<SelectLocationViewWidget> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
           child: Stack(clipBehavior: Clip.none, children: [
-            GoogleMap(
+            AdaptiveMap(
               initialCameraPosition: _cameraPosition,
               minMaxZoomPreference: const MinMaxZoomPreference(0, 16),
               zoomControlsEnabled: false, compassEnabled: false,
@@ -315,7 +316,7 @@ class _SelectLocationViewWidgetState extends State<SelectLocationViewWidget> {
                 }
               },
               onCameraMove: ((position) => _cameraPosition = position),
-              onMapCreated: (GoogleMapController controller) {
+              onMapCreated: (AdaptiveMapController controller) {
                 _mapController = controller;
                 // Don't set any polygon initially - wait for user interaction
               },

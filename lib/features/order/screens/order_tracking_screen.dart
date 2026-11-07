@@ -30,6 +30,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../store/domain/models/store_model.dart';
+import 'package:fasta_deliveries/common/widgets/adaptive_map/adaptive_map.dart';
 
 class OrderTrackingScreen extends StatefulWidget {
   final String? orderID;
@@ -41,7 +42,7 @@ class OrderTrackingScreen extends StatefulWidget {
 }
 
 class OrderTrackingScreenState extends State<OrderTrackingScreen> with WidgetsBindingObserver {
-  GoogleMapController? _controller;
+  AdaptiveMapController? _controller;
   bool _isLoading = true;
   Set<Marker> _markers = HashSet<Marker>();
   Timer? _timer;
@@ -170,14 +171,14 @@ class OrderTrackingScreenState extends State<OrderTrackingScreen> with WidgetsBi
               MouseRegion(
                 onEnter: (event) => onEntered(true),
                 onExit: (event) => onEntered(false),
-                child: GoogleMap(
+                child: AdaptiveMap(
                   initialCameraPosition: CameraPosition(target: LatLng(
                     double.parse(track.deliveryAddress!.latitude!), double.parse(track.deliveryAddress!.longitude!),
                   ), zoom: 16),
                   minMaxZoomPreference: const MinMaxZoomPreference(0, 16),
                   zoomControlsEnabled: false,
                   markers: _markers,
-                  onMapCreated: (GoogleMapController controller) {
+                  onMapCreated: (AdaptiveMapController controller) {
                     _controller = controller;
                     _isLoading = false;
                     setMarker(
@@ -476,7 +477,7 @@ class OrderTrackingScreenState extends State<OrderTrackingScreen> with WidgetsBi
     setState(() {});
   }
 
-  Future<void> zoomToFit(GoogleMapController? controller, LatLngBounds? bounds, LatLng centerBounds, {double padding = 0.5}) async {
+  Future<void> zoomToFit(AdaptiveMapController? controller, LatLngBounds? bounds, LatLng centerBounds, {double padding = 0.5}) async {
     bool keepZoomingOut = true;
 
     while(keepZoomingOut) {
