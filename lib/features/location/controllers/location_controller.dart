@@ -42,6 +42,7 @@ import 'package:fasta_deliveries/common/widgets/custom_loader.dart';
 import 'package:fasta_deliveries/common/widgets/custom_snackbar.dart';
 import 'package:fasta_deliveries/helper/taxi_helper.dart';
 import 'package:fasta_deliveries/util/app_constants.dart';
+import 'package:fasta_deliveries/common/widgets/adaptive_map/adaptive_map.dart';
 
 class LocationController extends GetxController implements GetxService {
   final LocationServiceInterface locationServiceInterface;
@@ -100,8 +101,8 @@ class LocationController extends GetxController implements GetxService {
   final List<String?> _addressTypeList = ['home', 'office', 'others'];
   List<String?> get addressTypeList => _addressTypeList;
 
-  GoogleMapController? _mapController;
-  GoogleMapController? get mapController => _mapController;
+  AdaptiveMapController? _mapController;
+  AdaptiveMapController? get mapController => _mapController;
 
   final List<PredictionModel> _predictionList = [];
   List<PredictionModel> get predictionList => _predictionList;
@@ -154,11 +155,11 @@ class LocationController extends GetxController implements GetxService {
     _pickAddress = _address;
   }
 
-  void setMapController(GoogleMapController mapController) {
+  void setMapController(AdaptiveMapController mapController) {
     _mapController = mapController;
   }
 
-  Future<AddressModel> getCurrentLocation(bool fromAddress, {GoogleMapController? mapController, LatLng? defaultLatLng, bool notify = true}) async {
+  Future<AddressModel> getCurrentLocation(bool fromAddress, {AdaptiveMapController? mapController, LatLng? defaultLatLng, bool notify = true}) async {
     _loading = true;
     if(notify) {
       update();
@@ -499,7 +500,7 @@ class LocationController extends GetxController implements GetxService {
   //   }
   // }
 
-  Future<AddressModel> setLocation(String? placeID, String? address, GoogleMapController? mapController) async {
+  Future<AddressModel> setLocation(String? placeID, String? address, AdaptiveMapController? mapController) async {
     _loading = true;
     update();
 

@@ -48,6 +48,7 @@ import 'package:fasta_deliveries/helper/route_helper.dart';
 import 'package:fasta_deliveries/util/dimensions.dart';
 import 'package:fasta_deliveries/util/images.dart';
 import 'package:fasta_deliveries/util/styles.dart';
+import 'package:fasta_deliveries/common/widgets/adaptive_map/adaptive_map.dart';
 
 part '../widgets/order_details_appbar.dart';
 part '../widgets/order_details_info.dart';
@@ -69,7 +70,7 @@ class OrderDetailsNewScreenState extends State<OrderDetailsNewScreen> {
   Timer? _timer;
   final ScrollController scrollController = ScrollController();
   final DraggableScrollableController _sheetController = DraggableScrollableController();
-  GoogleMapController? _mapController;
+  AdaptiveMapController? _mapController;
   Set<Marker> _markers = HashSet<Marker>();
   bool _mapLoading = true;
 
@@ -344,7 +345,7 @@ class OrderDetailsNewScreenState extends State<OrderDetailsNewScreen> {
               : hasDeliveryMan && ongoing
                 ? Stack(children: [
                     Positioned.fill(
-                      child: GoogleMap(
+                      child: AdaptiveMap(
                         initialCameraPosition: CameraPosition(
                           target: LatLng(
                             double.tryParse(order.deliveryAddress?.latitude ?? '') ?? 0.0,

@@ -41,6 +41,7 @@ import 'package:fasta_deliveries/helper/zone_payment_helper.dart';
 import 'package:fasta_deliveries/util/dimensions.dart';
 import 'package:fasta_deliveries/util/images.dart';
 import 'package:fasta_deliveries/util/styles.dart';
+import 'package:fasta_deliveries/common/widgets/adaptive_map/adaptive_map.dart';
 
 class ParcelRequestScreen extends StatefulWidget {
   final ParcelCategoryModel parcelCategory;
@@ -73,7 +74,7 @@ class _ParcelRequestScreenState extends State<ParcelRequestScreen> {
 
   static const double _maxSheetFraction = 1.0;
   static const double _maxSlack = 0.02;
-  GoogleMapController? _mapController;
+  AdaptiveMapController? _mapController;
   final Set<Marker> _markers = HashSet<Marker>();
   GoogleMapCustomWindowController _customInfoWindowController = GoogleMapCustomWindowController();
 
@@ -247,7 +248,8 @@ class _ParcelRequestScreenState extends State<ParcelRequestScreen> {
     final dest = _latLngOf(_currentDestination());
     if (pickup == null || dest == null) return;
 
-    _customInfoWindowController.googleMapController = _mapController;
+    // Custom info windows need Google's map projection; on OpenStreetMap this is null and they are skipped.
+    _customInfoWindowController.googleMapController = _mapController?.google;
 
     BitmapDescriptor pickupIcon = BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
     BitmapDescriptor destIcon = BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
@@ -278,7 +280,7 @@ class _ParcelRequestScreenState extends State<ParcelRequestScreen> {
 
     if (_customInfoWindowController.addInfoWindow == null) {
       _customInfoWindowController = GoogleMapCustomWindowController()
-        ..googleMapController = _mapController;
+        ..googleMapController = _mapController?.google;
     }
     try {
       _customInfoWindowController.addInfoWindow!(
@@ -619,7 +621,7 @@ class _ParcelRequestScreenState extends State<ParcelRequestScreen> {
 
             return SizedBox.expand(child: Stack(children: [
               Positioned.fill(
-                child: GoogleMap(
+                child: AdaptiveMap(
                   mapType: MapType.normal,
                   style: Get.isDarkMode ? Get.find<ThemeController>().darkMap : Get.find<ThemeController>().lightMap,
                   initialCameraPosition: CameraPosition(
@@ -637,7 +639,7 @@ class _ParcelRequestScreenState extends State<ParcelRequestScreen> {
                   },
                   onMapCreated: (controller) {
                     _mapController = controller;
-                    _customInfoWindowController.googleMapController = controller;
+                    _customInfoWindowController.googleMapController = controller.google;
                     _setupMap();
                   },
                 ),

@@ -18,6 +18,7 @@ import 'dart:collection';
 import 'dart:ui';
 
 import '../../store/domain/models/store_model.dart';
+import 'package:fasta_deliveries/common/widgets/adaptive_map/adaptive_map.dart';
 
 class TrackingMapWidget extends StatefulWidget {
   final OrderModel? track;
@@ -28,7 +29,7 @@ class TrackingMapWidget extends StatefulWidget {
 }
 
 class _TrackingMapWidgetState extends State<TrackingMapWidget> {
-  GoogleMapController? _controller;
+  AdaptiveMapController? _controller;
   bool _isLoading = true;
   Set<Marker> _markers = HashSet<Marker>();
 
@@ -65,7 +66,7 @@ class _TrackingMapWidgetState extends State<TrackingMapWidget> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-            child: GoogleMap(
+            child: AdaptiveMap(
               mapType: MapType.normal,
               initialCameraPosition: CameraPosition(target: LatLng(
                 double.parse(widget.track!.deliveryAddress!.latitude!), double.parse(widget.track!.deliveryAddress!.longitude!),
@@ -73,7 +74,7 @@ class _TrackingMapWidgetState extends State<TrackingMapWidget> {
               minMaxZoomPreference: const MinMaxZoomPreference(0, 16),
               zoomControlsEnabled: true,
               markers: _markers,
-              onMapCreated: (GoogleMapController controller) {
+              onMapCreated: (AdaptiveMapController controller) {
                 _controller = controller;
                 _isLoading = false;
                 setMarker(
@@ -182,7 +183,7 @@ class _TrackingMapWidgetState extends State<TrackingMapWidget> {
   }
 
 
-  Future<void> zoomToFit(GoogleMapController? controller, LatLngBounds? bounds, LatLng centerBounds, {double padding = 0.5}) async {
+  Future<void> zoomToFit(AdaptiveMapController? controller, LatLngBounds? bounds, LatLng centerBounds, {double padding = 0.5}) async {
     bool keepZoomingOut = true;
 
     while(keepZoomingOut) {

@@ -26,13 +26,14 @@ import 'package:fasta_deliveries/helper/route_helper.dart';
 import 'package:fasta_deliveries/util/app_constants.dart';
 import 'package:fasta_deliveries/util/dimensions.dart';
 import 'package:fasta_deliveries/util/styles.dart';
+import 'package:fasta_deliveries/common/widgets/adaptive_map/adaptive_map.dart';
 
 class PickMapScreen extends StatefulWidget {
   final bool fromSignUp;
   final bool fromAddAddress;
   final bool canRoute;
   final String? route;
-  final GoogleMapController? googleMapController;
+  final AdaptiveMapController? googleMapController;
   final Function(AddressModel address)? onPicked;
   final bool fromLandingPage;
   final bool fromGuestCheckout;
@@ -48,7 +49,7 @@ class PickMapScreen extends StatefulWidget {
 }
 
 class _PickMapScreenState extends State<PickMapScreen> {
-  GoogleMapController? _mapController;
+  AdaptiveMapController? _mapController;
   CameraPosition? _cameraPosition;
   late LatLng _initialPosition;
   bool locationAlreadyAllow = false;
@@ -127,7 +128,7 @@ class _PickMapScreenState extends State<PickMapScreen> {
                   child:  Stack(children: [
                     ClipRRect(
                       borderRadius:BorderRadius.circular(Dimensions.radiusDefault),
-                      child: GoogleMap(
+                      child: AdaptiveMap(
                         initialCameraPosition: CameraPosition(
                           target: widget.fromAddAddress ? LatLng(locationController.position.latitude, locationController.position.longitude)
                               : _initialPosition,
@@ -135,7 +136,7 @@ class _PickMapScreenState extends State<PickMapScreen> {
                         ),
                         minMaxZoomPreference: const MinMaxZoomPreference(0, 16),
                         myLocationButtonEnabled: false,
-                        onMapCreated: (GoogleMapController mapController) async {
+                        onMapCreated: (AdaptiveMapController mapController) async {
                           _mapController = mapController;
                           if(!widget.fromAddAddress && widget.route != 'splash' && widget.initialPosition == null) {
                             Get.find<LocationController>().getCurrentLocation(false, mapController: mapController).then((value) async {
@@ -240,7 +241,7 @@ class _PickMapScreenState extends State<PickMapScreen> {
               ],
             ),
           ) : Stack(children: [
-            GoogleMap(
+            AdaptiveMap(
               initialCameraPosition: CameraPosition(
                 target: widget.fromAddAddress ? LatLng(locationController.position.latitude, locationController.position.longitude)
                     : _initialPosition,
@@ -248,7 +249,7 @@ class _PickMapScreenState extends State<PickMapScreen> {
               ),
               minMaxZoomPreference: const MinMaxZoomPreference(0, 16),
               myLocationButtonEnabled: false,
-              onMapCreated: (GoogleMapController mapController) {
+              onMapCreated: (AdaptiveMapController mapController) {
                 _mapController = mapController;
 
                 if(!widget.fromAddAddress && widget.route != RouteHelper.onBoarding && widget.initialPosition == null) {
@@ -464,7 +465,7 @@ class _PickMapScreenState extends State<PickMapScreen> {
 }
 
 class _MapTopSearchBar extends StatelessWidget {
-  final GoogleMapController? mapController;
+  final AdaptiveMapController? mapController;
   final String? pickedAddress;
   final bool showBackButton;
   const _MapTopSearchBar({required this.mapController, required this.pickedAddress, required this.showBackButton});

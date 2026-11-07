@@ -31,6 +31,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:get/get.dart';
+import 'package:fasta_deliveries/common/widgets/adaptive_map/adaptive_map.dart';
 
 class AddAddressScreen extends StatefulWidget {
   final bool fromCheckout;
@@ -197,7 +198,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                                       child: ClipRRect(
                                         borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
                                         child: Stack(clipBehavior: Clip.none, children: [
-                                          GoogleMap(
+                                          AdaptiveMap(
                                             initialCameraPosition: CameraPosition(target: _initialPosition, zoom: 16),
                                             minMaxZoomPreference: const MinMaxZoomPreference(0, 16),
                                             onTap: (latLng) {
@@ -227,7 +228,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                                               });
                                             },
                                             onCameraMove: ((position) => _cameraPosition = position),
-                                            onMapCreated: (GoogleMapController controller) {
+                                            onMapCreated: (AdaptiveMapController controller) {
                                               locationController.setMapController(controller);
                                               if(widget.address == null) {
                                                 locationController.getCurrentLocation(true, mapController: controller);
@@ -505,7 +506,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
                       child: Stack(clipBehavior: Clip.none, children: [
-                        GoogleMap(
+                        AdaptiveMap(
                           initialCameraPosition: CameraPosition(target: _initialPosition, zoom: 16),
                           minMaxZoomPreference: const MinMaxZoomPreference(0, 16),
                           onTap: (latLng) {
@@ -544,7 +545,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                             _cameraPosition = position;
                           }
                           ),
-                          onMapCreated: (GoogleMapController controller) {
+                          onMapCreated: (AdaptiveMapController controller) {
                             locationController.setMapController(controller);
                             if(widget.address == null) {
                               locationController.getCurrentLocation(true, mapController: controller);

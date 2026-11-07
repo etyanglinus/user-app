@@ -8,9 +8,10 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:fasta_deliveries/util/styles.dart';
+import 'package:fasta_deliveries/common/widgets/adaptive_map/adaptive_map.dart';
 
 class LocationSearchDialogWidget extends StatefulWidget {
-  final GoogleMapController? mapController;
+  final AdaptiveMapController? mapController;
   final bool? isPickedUp;
   final bool isFrom;
   final LocationType? locationType;
