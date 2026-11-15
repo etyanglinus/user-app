@@ -1,3 +1,4 @@
+import 'package:fasta_deliveries/features/profile/widgets/date_of_birth_field_widget.dart';
 import 'dart:io';
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/cupertino.dart';
@@ -43,6 +44,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  String? _dateOfBirth;
   JustTheController toolController = JustTheController();
   final ScrollController scrollController = ScrollController();
   bool isPhoneVerified = false;
@@ -116,6 +118,10 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
 
         if(profileController.userInfoModel != null && _emailController.text.isEmpty) {
           _emailController.text = profileController.userInfoModel?.email ?? '';
+        }
+
+        if(profileController.userInfoModel != null && _dateOfBirth == null) {
+          _dateOfBirth = profileController.userInfoModel?.dateOfBirth ?? '';
         }
 
         return isLoggedIn ? profileController.userInfoModel != null ? ResponsiveHelper.isDesktop(context) ? webView(profileController, isLoggedIn) : ProfileBgWidget(
@@ -241,6 +247,13 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                       ),
 
                     ]),
+                    const SizedBox(height: Dimensions.paddingSizeExtraOverLarge),
+
+                    DateOfBirthFieldWidget(
+                      value: _dateOfBirth,
+                      locked: profileController.userInfoModel!.dateOfBirthLocked,
+                      onChanged: (value) => setState(() => _dateOfBirth = value),
+                    ),
 
                   ]),
                 ),
@@ -428,6 +441,13 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                           ]),
                           const SizedBox(height: Dimensions.paddingSizeExtraOverLarge),
 
+                          DateOfBirthFieldWidget(
+                            value: _dateOfBirth,
+                            locked: profileController.userInfoModel!.dateOfBirthLocked,
+                            onChanged: (value) => setState(() => _dateOfBirth = value),
+                          ),
+                          const SizedBox(height: Dimensions.paddingSizeExtraOverLarge),
+
                           CustomButton(
                             width: 500,
                             buttonText: 'update_profile'.tr,
@@ -474,7 +494,10 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
     }else if (phoneNumber.length < 6) {
       showCustomSnackBar('enter_a_valid_phone_number'.tr);
     } else {
-      UpdateUserModel updatedUser = UpdateUserModel(name: name, email: email, phone: numberWithCountryCode, buttonType: fromButton ? '' : fromPhone ? 'phone' : 'email');
+      UpdateUserModel updatedUser = UpdateUserModel(
+        name: name, email: email, phone: numberWithCountryCode, buttonType: fromButton ? '' : fromPhone ? 'phone' : 'email',
+        dateOfBirth: profileController.userInfoModel?.dateOfBirthLocked == true ? null : _dateOfBirth,
+      );
       await profileController.updateUserInfo(updatedUser, Get.find<AuthController>().getUserToken(), fromButton: fromButton);
     }
   }

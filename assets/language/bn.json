@@ -3058,5 +3058,10 @@
   "use_your_registered_phone_number_to_get_otp": "ওটিপি পেতে আপনার নিবন্ধিত ফোন নম্বর ব্যবহার করুন",
   "restaurant_discount_applied": "রেস্টুরেন্ট ডিসকাউন্ট প্রয়োগ করা হয়েছে",
   "bundle_discount_applied": "বান্ডেল ডিসকাউন্ট প্রয়োগ করা হয়েছে",
-  "facebook_login_could_not_be_completed": "ফেসবুক দিয়ে আপনাকে সাইন ইন করানো যায়নি। অনুগ্রহ করে অন্য কোনো সাইন ইন পদ্ধতি ব্যবহার করুন।"
+  "facebook_login_could_not_be_completed": "ফেসবুক দিয়ে আপনাকে সাইন ইন করানো যায়নি। অনুগ্রহ করে অন্য কোনো সাইন ইন পদ্ধতি ব্যবহার করুন।",
+  "date_of_birth": "Date of birth",
+  "add_your_birthday": "Add your birthday",
+  "date_of_birth_hint": "Get a birthday gift from us every year. You can set this only once.",
+  "date_of_birth_locked_hint": "Your date of birth can only be set once. Contact support to correct it.",
+  "birthday_gift": "Birthday gift"
 }

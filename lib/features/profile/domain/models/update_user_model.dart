@@ -7,8 +7,10 @@ class UpdateUserModel {
   String? sessionInfo;
   String? verificationOn;
   String? verificationMedium;
+  /// yyyy-MM-dd; only sent while the customer has not set it yet.
+  String? dateOfBirth;
 
-  UpdateUserModel({this.name, this.email, this.phone, this.otp, this.buttonType, this.sessionInfo, this.verificationOn, this.verificationMedium});
+  UpdateUserModel({this.name, this.email, this.phone, this.otp, this.buttonType, this.sessionInfo, this.verificationOn, this.verificationMedium, this.dateOfBirth});
 
   UpdateUserModel.fromJson(Map<String, dynamic> json) {
     name = json['name'];
@@ -19,6 +21,7 @@ class UpdateUserModel {
     sessionInfo = json['session_info'];
     verificationOn = json['verification_on'];
     verificationMedium = json['verification_medium'];
+    dateOfBirth = json['date_of_birth'];
   }
 
   Map<String, String> toJson() {
@@ -36,6 +39,9 @@ class UpdateUserModel {
     }
     if (verificationMedium != null) {
       data['verification_medium'] = verificationMedium??'';
+    }
+    if (dateOfBirth != null && dateOfBirth!.isNotEmpty) {
+      data['date_of_birth'] = dateOfBirth!;
     }
     return data;
   }
