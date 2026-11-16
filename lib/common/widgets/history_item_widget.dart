@@ -55,6 +55,7 @@ class HistoryItemWidget extends StatelessWidget {
                     : data![index].transactionType == 'partial_payment' ? '${'spend_on_order'.tr} # ${data![index].reference}'
                     : data![index].transactionType == 'loyalty_point' ? 'converted_from_loyalty_point'.tr
                     : data![index].transactionType == 'referrer' ? 'earned_by_referral'.tr
+                    : data![index].transactionType == 'birthday_bonus' ? 'birthday_gift'.tr
                     : data![index].transactionType == 'order_place' ? '${'order_place'.tr} # ${data![index].reference}'
                     : data![index].transactionType == 'ride_booking' ? 'ride_booking'.tr
                     : data![index].transactionType == 'service_booking' ? 'service_booking'.tr

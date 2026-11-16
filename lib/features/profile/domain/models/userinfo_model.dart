@@ -6,6 +6,9 @@ class UserInfoModel {
   String? fName;
   String? lName;
   String? email;
+  /// yyyy-MM-dd, set once by the customer (birthday rewards).
+  String? dateOfBirth;
+  bool dateOfBirthLocked = false;
   String? imageFullUrl;
   String? phone;
   String? createdAt;
@@ -59,6 +62,8 @@ class UserInfoModel {
     fName = json['f_name'];
     lName = json['l_name'];
     email = json['email'];
+    dateOfBirth = json['date_of_birth']?.toString();
+    dateOfBirthLocked = json['date_of_birth_locked'] == true || (dateOfBirth != null && dateOfBirth!.isNotEmpty);
     imageFullUrl = json['image_full_url'];
     phone = json['phone'];
     createdAt = json['created_at'];
@@ -94,6 +99,8 @@ class UserInfoModel {
     data['f_name'] = fName;
     data['l_name'] = lName;
     data['email'] = email;
+    data['date_of_birth'] = dateOfBirth;
+    data['date_of_birth_locked'] = dateOfBirthLocked;
     data['image_full_url'] = imageFullUrl;
     data['phone'] = phone;
     data['created_at'] = createdAt;

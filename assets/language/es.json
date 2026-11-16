@@ -3056,5 +3056,10 @@
   "use_your_registered_phone_number_to_get_otp": "Usa tu número de teléfono registrado para recibir el OTP",
   "restaurant_discount_applied": "Descuento del restaurante aplicado",
   "bundle_discount_applied": "Descuento del paquete aplicado",
-  "facebook_login_could_not_be_completed": "No pudimos iniciar tu sesión con Facebook. Por favor, prueba otro método de inicio de sesión."
+  "facebook_login_could_not_be_completed": "No pudimos iniciar tu sesión con Facebook. Por favor, prueba otro método de inicio de sesión.",
+  "date_of_birth": "Date of birth",
+  "add_your_birthday": "Add your birthday",
+  "date_of_birth_hint": "Get a birthday gift from us every year. You can set this only once.",
+  "date_of_birth_locked_hint": "Your date of birth can only be set once. Contact support to correct it.",
+  "birthday_gift": "Birthday gift"
 }
