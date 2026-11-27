@@ -9,7 +9,10 @@ import 'package:get/get.dart';
 
 class NoInternetScreen extends StatelessWidget {
   final Widget? child;
-  const NoInternetScreen({super.key, this.child});
+  /// Overrides the "no internet" line, e.g. when the device is online but the
+  /// server failed. Defaults to `no_internet_connection`.
+  final String? messageKey;
+  const NoInternetScreen({super.key, this.child, this.messageKey});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +29,7 @@ class NoInternetScreen extends StatelessWidget {
             )),
             const SizedBox(height: Dimensions.paddingSizeExtraSmall),
             Text(
-              'no_internet_connection'.tr,
+              (messageKey ?? 'no_internet_connection').tr,
               textAlign: TextAlign.center,
               style: robotoRegular.copyWith(color: Theme.of(context).disabledColor),
             ),
