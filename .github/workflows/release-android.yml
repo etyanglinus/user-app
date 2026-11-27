@@ -26,8 +26,6 @@ permissions:
 
 env:
   PACKAGE_NAME: com.fasta.fasta_rides_userapp
-  # versionCode must always increase. Starts above the codes already uploaded by hand.
-  VERSION_CODE_BASE: 100
 
 jobs:
   release:
@@ -76,8 +74,12 @@ jobs:
             python3 .github/scripts/flutter_ratchet.py test-report.json test/ci/known-failures.txt
           fi
 
+      # Version name and code come from pubspec.yaml (version: NAME+CODE). Play rejects a code
+      # it has already seen, so bump the +CODE part before each release.
       - name: Build App Bundle
-        run: flutter build appbundle --release --build-number=$((VERSION_CODE_BASE + GITHUB_RUN_NUMBER))
+        run: |
+          grep -E '^version:' pubspec.yaml | tee -a "$GITHUB_STEP_SUMMARY"
+          flutter build appbundle --release
 
       - name: Confirm package and signer
         run: |
