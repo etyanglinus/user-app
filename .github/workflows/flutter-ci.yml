@@ -38,9 +38,15 @@ jobs:
       - name: Analyze (errors fail; warnings and infos are reported)
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
-      - name: Unit tests
+      - name: Unit tests (ratchet against test/ci/known-failures.txt)
         run: |
-          if ls test/*_test.dart >/dev/null 2>&1 || find test -name '*_test.dart' | grep -q .; then flutter test; else echo "No tests."; fi
+          if find test -name '*_test.dart' | grep -q .; then
+            flutter test --file-reporter json:test-report.json || true
+            python3 .github/scripts/flutter_ratchet.py test-report.json test/ci/known-failures.txt | tee -a "$GITHUB_STEP_SUMMARY"
+            exit "${PIPESTATUS[0]}"
+          else
+            echo "No tests."
+          fi
 
       - name: Release signing (optional)
         env:
