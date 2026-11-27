@@ -5,6 +5,8 @@ import 'package:fasta_deliveries/features/ai_chat_bot/domain/models/ai_chat_conv
 import 'package:fasta_deliveries/features/ai_chat_bot/domain/models/ai_chat_message_model.dart';
 import 'package:fasta_deliveries/features/ai_chat_bot/domain/services/ai_chat_bot_service_interface.dart';
 import 'package:fasta_deliveries/features/cart/controllers/cart_controller.dart';
+import 'package:fasta_deliveries/features/splash/controllers/splash_controller.dart';
+import 'package:fasta_deliveries/util/app_constants.dart';
 
 class AiChatBotController extends GetxController implements GetxService {
   final AiChatBotServiceInterface aiChatBotServiceInterface;
@@ -29,14 +31,15 @@ class AiChatBotController extends GetxController implements GetxService {
   bool isDeleting(int conversationId) => _deletingIds.contains(conversationId);
 
   Future<void> getConversationList(int offset, {bool reload = false}) async {
-    if(reload || offset == 1) {
+    if (reload || offset == 1) {
       _conversationModel = null;
     }
 
-    AiChatConversationModel? conversationModel = await aiChatBotServiceInterface.getConversationList(offset: offset);
+    AiChatConversationModel? conversationModel = await aiChatBotServiceInterface
+        .getConversationList(offset: offset);
 
-    if(conversationModel != null) {
-      if(offset == 1) {
+    if (conversationModel != null) {
+      if (offset == 1) {
         _conversationModel = conversationModel;
       } else {
         _conversationModel!.totalSize = conversationModel.totalSize;
@@ -47,18 +50,22 @@ class AiChatBotController extends GetxController implements GetxService {
     update();
   }
 
-  Future<void> getMessages(int conversationId, int offset, {bool firstLoad = false, bool silent = false}) async {
-    if((firstLoad || offset == 1) && !silent) {
+  Future<void> getMessages(
+    int conversationId,
+    int offset, {
+    bool firstLoad = false,
+    bool silent = false,
+  }) async {
+    if ((firstLoad || offset == 1) && !silent) {
       _messageModel = null;
       // update();
     }
 
-    AiChatMessageModel? messageModel = await aiChatBotServiceInterface.getMessages(
-      conversationId: conversationId, offset: offset,
-    );
+    AiChatMessageModel? messageModel = await aiChatBotServiceInterface
+        .getMessages(conversationId: conversationId, offset: offset);
 
-    if(messageModel != null) {
-      if(offset == 1) {
+    if (messageModel != null) {
+      if (offset == 1) {
         _messageModel = messageModel;
       } else {
         _messageModel!.totalSize = messageModel.totalSize;
@@ -74,13 +81,18 @@ class AiChatBotController extends GetxController implements GetxService {
     int? conversationId,
     ValueChanged<int>? onConversationIdAssigned,
   }) async {
-    if(message.trim().isEmpty || _isSendingMessage) {
+    if (message.trim().isEmpty || _isSendingMessage) {
       return null;
     }
 
     _isSendingMessage = true;
 
-    _messageModel ??= AiChatMessageModel(messages: [], totalSize: 0, offset: 1, limit: 20);
+    _messageModel ??= AiChatMessageModel(
+      messages: [],
+      totalSize: 0,
+      offset: 1,
+      limit: 20,
+    );
     _messageModel!.messages ??= [];
 
     final AiChatMessage userMessage = AiChatMessage(
@@ -96,7 +108,8 @@ class AiChatBotController extends GetxController implements GetxService {
     Response? response;
     try {
       response = await aiChatBotServiceInterface.sendMessage(
-        message: message, conversationId: conversationId,
+        message: message,
+        conversationId: conversationId,
       );
     } catch (_) {
       response = null;
@@ -104,8 +117,12 @@ class AiChatBotController extends GetxController implements GetxService {
 
     // `ai-chat/send` answers `201 Created`; a plain `== 200` check read every reply as a
     // failure, dropping the assistant's message and the customer's own along with it.
-    if (response != null && ApiClient.isSuccessCode(response.statusCode) && response.body is Map) {
-      final Map<String, dynamic> body = Map<String, dynamic>.from(response.body as Map);
+    if (response != null &&
+        ApiClient.isSuccessCode(response.statusCode) &&
+        response.body is Map) {
+      final Map<String, dynamic> body = Map<String, dynamic>.from(
+        response.body as Map,
+      );
 
       final dynamic newId = body['conversation_id'];
       if (newId is int) {
@@ -118,13 +135,19 @@ class AiChatBotController extends GetxController implements GetxService {
       if (body['role'] != null) {
         try {
           final AiChatMessage assistantMessage = AiChatMessage.fromJson(body);
-          assistantMessage.createdAt ??= DateTime.now().toUtc().toIso8601String();
+          assistantMessage.createdAt ??= DateTime.now()
+              .toUtc()
+              .toIso8601String();
           _messageModel!.messages!.insert(0, assistantMessage);
           _messageModel!.totalSize = (_messageModel!.totalSize ?? 0) + 1;
           // The bot mutates the cart server-side during this call — the app never
           // otherwise calls CartController for it, so the header badge and cart
           // screens would stay stale until some unrelated screen happened to refetch.
-          if (assistantMessage.metadata?.cartUpdated == true) {
+          final splashController = Get.find<SplashController>();
+          final activeModule =
+              splashController.module ?? splashController.cacheModule;
+          if (assistantMessage.metadata?.cartUpdated == true &&
+              activeModule?.moduleType != AppConstants.buycar) {
             Get.find<CartController>().getAllCarts();
           }
         } catch (_) {}
@@ -147,7 +170,9 @@ class AiChatBotController extends GetxController implements GetxService {
     _deletingIds.add(conversationId);
     update();
 
-    final bool success = await aiChatBotServiceInterface.deleteConversation(conversationId: conversationId);
+    final bool success = await aiChatBotServiceInterface.deleteConversation(
+      conversationId: conversationId,
+    );
 
     if (success && _conversationModel?.data != null) {
       _conversationModel!.data!.removeWhere((c) => c.id == conversationId);
@@ -177,5 +202,4 @@ class AiChatBotController extends GetxController implements GetxService {
     _isLoading = true;
     update();
   }
-
 }

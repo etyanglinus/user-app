@@ -675,6 +675,7 @@ class AppConstants {
   static const String ecommerce = 'ecommerce';
   static const String grocery = 'grocery';
   static const String taxi = 'rental';
+  static const String buycar = 'buycar';
   static const String ride = 'ride-share';
   static const String service = 'service';
 

@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.sixamtech.fasta_deliveries_user">
+    package="com.fasta.fasta_rides_userapp">
     <!-- io.flutter.app.FlutterApplication is an android.app.Application that
          calls FlutterMain.startInitialization(this); in its onCreate method.
          In most cases you can leave this as-is, but you if you want to provide
@@ -103,7 +103,7 @@
         <meta-data android:name="com.facebook.sdk.ClientToken" android:value="@string/facebook_client_token"/>
 
         <activity
-            android:name="com.sixamtech.fasta_deliveries_user.sign_in_with_apple.SignInWithAppleCallback"
+            android:name="com.aboutyou.dart_packages.sign_in_with_apple.SignInWithAppleCallback"
             android:exported="true"
             >
             <intent-filter>

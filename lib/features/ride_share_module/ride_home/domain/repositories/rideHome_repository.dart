@@ -1,6 +1,5 @@
    
 import 'package:get/get.dart';
-import 'package:fasta_deliveries/features/profile/controllers/profile_controller.dart';
 import 'package:fasta_deliveries/util/app_constants.dart';
 
 import '../../../../../api/api_client.dart';
@@ -9,6 +8,24 @@ import 'rideHome_repository_interface.dart';
 class RideHomeRepository implements RideHomeRepositoryInterface {
   final ApiClient apiClient;
   RideHomeRepository({required this.apiClient});
+
+  @override
+  Future<Response> estimateFare(Map<String, dynamic> body) {
+    return apiClient.postData(
+      AppConstants.estimatedFare,
+      body,
+      handleError: false,
+    );
+  }
+
+  @override
+  Future<Response> createRide(Map<String, dynamic> body) {
+    return apiClient.postData(
+      AppConstants.rideRequest,
+      body,
+      handleError: false,
+    );
+  }
 
   @override
   Future add(value) {

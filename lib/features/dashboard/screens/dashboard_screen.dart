@@ -619,7 +619,8 @@ class DashboardScreenState extends State<DashboardScreen> {
       return false;
     }
     // Rental module has no flash sale / free-delivery promos — never show the banner.
-    if (splashController.module?.moduleType == AppConstants.taxi) {
+    if (splashController.module?.moduleType == AppConstants.taxi ||
+        splashController.module?.moduleType == AppConstants.buycar) {
       return false;
     }
     return _isFlashOngoing(flashSaleController) || splashController.module?.freeDelivery == 1;

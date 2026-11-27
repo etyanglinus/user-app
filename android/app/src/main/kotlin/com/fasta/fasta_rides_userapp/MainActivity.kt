@@ -1,4 +1,4 @@
-package com.sixamtech.fasta_deliveries_user
+package com.fasta.fasta_rides_userapp
 
 import io.flutter.embedding.android.FlutterActivity
 

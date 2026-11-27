@@ -59,6 +59,7 @@ class HomeScreen {
     Get.find<FlashSaleController>().setEmptyFlashSale(fromModule: fromModule);
 
     final String moduleType = Get.find<SplashController>().module?.moduleType.toString() ?? '';
+    final bool isLoggedIn = AuthHelper.isLoggedIn();
     final bool isStoreModule = Get.find<SplashController>().module != null
         && moduleType != AppConstants.ride
         && !Get.find<SplashController>().configModel!.moduleConfig!.module!.isParcel!
@@ -82,7 +83,7 @@ class HomeScreen {
     }
     else if(isStoreModule) {
 
-      if(AuthHelper.isLoggedIn() && Get.find<SplashController>().configModel!.repeatOrderOption == 1) {
+      if(isLoggedIn && Get.find<SplashController>().configModel!.repeatOrderOption == 1) {
         Get.find<StoreController>().getVisitAgainStoreList(fromModule: fromModule);
       }
 
@@ -118,8 +119,9 @@ class HomeScreen {
         Get.find<StoreController>().getQuickDeliveryStoreList(reload: reload);
       }
     }
-    if(AuthHelper.isLoggedIn()) {
-      await Get.find<ProfileController>().getUserInfo();
+    if(isLoggedIn) {
+      final Future<void> userInfoLoad =
+          Get.find<ProfileController>().getUserInfo();
       Get.find<NotificationController>().getNotificationList(reload);
       if(Get.find<SplashController>().configModel!.repeatOrderOption == 1) {
         Get.find<OrderController>().getLastOrders(reload: reload, isHome: true);
@@ -130,12 +132,13 @@ class HomeScreen {
       if(!Get.find<SplashController>().configModel!.moduleConfig!.module!.isRide!) {
         Get.find<CouponController>().getCouponList();
       }
+      await userInfoLoad;
     }
     Get.find<SplashController>().getModules();
     if(Get.find<SplashController>().module == null && Get.find<SplashController>().configModel!.module == null) {
       Get.find<BannerController>().getFeaturedBanner();
       Get.find<StoreController>().getFeaturedStoreList();
-      if(AuthHelper.isLoggedIn()) {
+      if(isLoggedIn) {
         Get.find<AddressController>().getAddressList();
       }
     }

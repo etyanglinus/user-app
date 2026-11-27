@@ -1799,7 +1799,6 @@ class _StoreCategoryTabsState extends State<_StoreCategoryTabs> {
   @override
   void initState() {
     super.initState();
-    SellerAnalytics.track(widget.store?.id, 'page_view');
     widget.activeIndexNotifier.addListener(_onActiveIndexChanged);
   }
 

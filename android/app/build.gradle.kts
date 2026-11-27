@@ -16,7 +16,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.sixamtech.fasta_deliveries_user"
+    namespace = "com.fasta.fasta_rides_userapp"
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
@@ -31,7 +31,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.sixamtech.fasta_deliveries_user"
+        applicationId = "com.fasta.fasta_rides_userapp"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = flutter.versionCode

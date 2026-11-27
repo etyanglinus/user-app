@@ -101,6 +101,7 @@ class OrderModel {
   String? refundCancellationNote;
   String? refundCustomerNote;
   Refund? refund;
+  String? manualRefundSettlementStatus;
   bool? prescriptionOrder;
   bool? taxStatus;
   String? cancellationReason;
@@ -270,7 +271,11 @@ class OrderModel {
     dmTips = JsonReader.toDouble(json['dm_tips']);
     refundCancellationNote = json['refund_cancellation_note'];
     refundCustomerNote = json['refund_customer_note'];
-    refund = json['refund'] != null ? Refund.fromJson(json['refund']) : null;
+    final refundJson = json['refund'];
+    refund = refundJson != null ? Refund.fromJson(refundJson) : null;
+    manualRefundSettlementStatus = refundJson is Map
+        ? JsonReader.toStr(refundJson['manual_settlement_status'])
+        : null;
     prescriptionOrder = json['prescription_order'];
     taxStatus = json['tax_status'] == 'included' ? true : false;
     cancellationReason = json['cancellation_reason'];
@@ -398,7 +403,11 @@ class OrderModel {
     data['refund_cancellation_note'] = refundCancellationNote;
     data['refund_customer_note'] = refundCustomerNote;
     if (deliveryAddress != null) {
-      data['refund'] = refund!.toJson();
+      data['refund'] = {
+        ...refund!.toJson(),
+        if (manualRefundSettlementStatus != null)
+          'manual_settlement_status': manualRefundSettlementStatus,
+      };
     }
     data['prescription_order'] = prescriptionOrder;
     data['processing_time'] = processingTime;

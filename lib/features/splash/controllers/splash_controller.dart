@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:get/get.dart';
 import 'package:fasta_deliveries/api/api_client.dart';
 import 'package:fasta_deliveries/common/enums/data_source_enum.dart';
-import 'package:fasta_deliveries/common/models/config_model.dart' hide DownloadUserAppLinks;
+import 'package:fasta_deliveries/common/models/config_model.dart'
+    hide DownloadUserAppLinks;
 import 'package:fasta_deliveries/common/models/module_model.dart';
 import 'package:fasta_deliveries/common/models/response_model.dart';
 import 'package:fasta_deliveries/common/widgets/custom_snackbar.dart';
@@ -105,7 +106,8 @@ class SplashController extends GetxController implements GetxService {
   DateTime get currentTime => DateTime.now();
 
   bool _showPaymentIncompleteBottomSheet = true;
-  bool get showPaymentIncompleteBottomSheet => _showPaymentIncompleteBottomSheet;
+  bool get showPaymentIncompleteBottomSheet =>
+      _showPaymentIncompleteBottomSheet;
 
   Uri? _deeplinkRoute;
   Uri? get deeplinkRoute => _deeplinkRoute;
@@ -132,16 +134,16 @@ class SplashController extends GetxController implements GetxService {
 
   void selectModuleIndex(int index, {bool canUpdate = true}) {
     _selectedModuleIndex = index;
-    if(canUpdate) {
+    if (canUpdate) {
       update();
     }
   }
 
   void selectModuleByTabIndex(int tabIndex) {
     selectModuleIndex(tabIndex);
-    if(tabIndex == 0) return;
+    if (tabIndex == 0) return;
     final int moduleListIndex = tabIndex - 1;
-    if(_moduleList != null && moduleListIndex < _moduleList!.length) {
+    if (_moduleList != null && moduleListIndex < _moduleList!.length) {
       switchModule(moduleListIndex, true);
     }
   }
@@ -151,8 +153,11 @@ class SplashController extends GetxController implements GetxService {
   /// shows the multi-module landing instead of staying scoped to the last module.
   void selectHomeModule() {
     selectModuleIndex(0);
-    if(!ResponsiveHelper.isDesktop(Get.context) && _module != null && _configModel?.module == null
-        && _moduleList != null && _moduleList!.length != 1) {
+    if (!ResponsiveHelper.isDesktop(Get.context) &&
+        _module != null &&
+        _configModel?.module == null &&
+        _moduleList != null &&
+        _moduleList!.length != 1) {
       removeModule();
       Get.find<StoreController>().resetStoreData();
     }
@@ -163,34 +168,85 @@ class SplashController extends GetxController implements GetxService {
     // update();
   }
 
-  Future<void> getConfigData({bool handleMaintenanceMode = false, NotificationBodyModel? notificationBody, bool loadModuleData = false, bool loadLandingData = false,
-    DataSourceEnum source = DataSourceEnum.local, bool fromMainFunction = false, bool fromDemoReset = false, bool canRoute = true, bool fromSplash = false}) async {
+  Future<void> getConfigData({
+    bool handleMaintenanceMode = false,
+    NotificationBodyModel? notificationBody,
+    bool loadModuleData = false,
+    bool loadLandingData = false,
+    DataSourceEnum source = DataSourceEnum.local,
+    bool fromMainFunction = false,
+    bool fromDemoReset = false,
+    bool canRoute = true,
+    bool fromSplash = false,
+  }) async {
     _hasConnection = true;
     _moduleIndex = 0;
     Response response;
-    if(source == DataSourceEnum.local && !fromDemoReset) {
-      response = await splashServiceInterface.getConfigData(source: DataSourceEnum.local);
-      _handleConfigResponse(response, handleMaintenanceMode, loadModuleData, loadLandingData, fromMainFunction, fromDemoReset, notificationBody, canRoute, fromSplash);
-      getConfigData(handleMaintenanceMode: handleMaintenanceMode, loadModuleData: loadModuleData, loadLandingData: loadLandingData, source: DataSourceEnum.client, notificationBody: notificationBody, canRoute: canRoute, fromSplash: fromSplash);
-
+    if (source == DataSourceEnum.local && !fromDemoReset) {
+      response = await splashServiceInterface.getConfigData(
+        source: DataSourceEnum.local,
+      );
+      _handleConfigResponse(
+        response,
+        handleMaintenanceMode,
+        loadModuleData,
+        loadLandingData,
+        fromMainFunction,
+        fromDemoReset,
+        notificationBody,
+        canRoute,
+        fromSplash,
+      );
+      getConfigData(
+        handleMaintenanceMode: handleMaintenanceMode,
+        loadModuleData: loadModuleData,
+        loadLandingData: loadLandingData,
+        source: DataSourceEnum.client,
+        notificationBody: notificationBody,
+        canRoute: canRoute,
+        fromSplash: fromSplash,
+      );
     } else {
-      response = await splashServiceInterface.getConfigData(source: DataSourceEnum.client);
-      _handleConfigResponse(response, handleMaintenanceMode, loadModuleData, loadLandingData, fromMainFunction, fromDemoReset, notificationBody, canRoute, fromSplash);
+      response = await splashServiceInterface.getConfigData(
+        source: DataSourceEnum.client,
+      );
+      _handleConfigResponse(
+        response,
+        handleMaintenanceMode,
+        loadModuleData,
+        loadLandingData,
+        fromMainFunction,
+        fromDemoReset,
+        notificationBody,
+        canRoute,
+        fromSplash,
+      );
     }
-
   }
 
-  Future<void> _handleConfigResponse(Response response, bool handleMaintenanceMode, bool loadModuleData, bool loadLandingData, bool fromMainFunction, bool fromDemoReset, NotificationBodyModel? notificationBody, bool canRoute, bool fromSplash) async {
-    if(response.statusCode == 200) {
+  Future<void> _handleConfigResponse(
+    Response response,
+    bool handleMaintenanceMode,
+    bool loadModuleData,
+    bool loadLandingData,
+    bool fromMainFunction,
+    bool fromDemoReset,
+    NotificationBodyModel? notificationBody,
+    bool canRoute,
+    bool fromSplash,
+  ) async {
+    if (response.statusCode == 200) {
       _data = response.body;
       _configModel = ConfigModel.fromJson(response.body);
-      if(_configModel!.module != null) {
+      if (_configModel!.module != null) {
         setModule(_configModel!.module);
-      }else if(GetPlatform.isWeb || (loadModuleData && _module != null)) {
-        setModule(GetPlatform.isWeb ? splashServiceInterface.getModule() : _module);
+      } else if (GetPlatform.isWeb || (loadModuleData && _module != null)) {
+        setModule(
+          GetPlatform.isWeb ? splashServiceInterface.getModule() : _module,
+        );
       }
       print('=====deeplink url: $_deeplinkRoute and canRoute: $canRoute');
-      if(!canRoute || _deeplinkRoute != null) {
+      if (!canRoute || _deeplinkRoute != null) {
         return;
       }
 
@@ -203,12 +259,14 @@ class SplashController extends GetxController implements GetxService {
         _onRemoveLoader();
         update();
         return;
-      } else if (handleMaintenanceMode && ((Get.currentRoute.contains(RouteHelper.update) && !isMaintenanceMode) || !isInMaintenance)) {
-          Get.offNamed(RouteHelper.getInitialRoute());
-        }
+      } else if (handleMaintenanceMode &&
+          ((Get.currentRoute.contains(RouteHelper.update) &&
+                  !isMaintenanceMode) ||
+              !isInMaintenance)) {
+        Get.offNamed(RouteHelper.getInitialRoute());
+      }
 
-
-      if(fromMainFunction) {
+      if (fromMainFunction) {
         _mainConfigRouting();
       } else if (fromDemoReset) {
         Get.offAllNamed(RouteHelper.getInitialRoute(fromSplash: true));
@@ -219,8 +277,8 @@ class SplashController extends GetxController implements GetxService {
         route(body: notificationBody);
       }
       _onRemoveLoader();
-    }else {
-      if(response.statusText == ApiClient.noInternetMessage) {
+    } else {
+      if (response.statusText == ApiClient.noInternetMessage) {
         _hasConnection = false;
       }
     }
@@ -228,7 +286,7 @@ class SplashController extends GetxController implements GetxService {
   }
 
   Future<void> _mainConfigRouting() async {
-    if(GetPlatform.isWeb) {
+    if (GetPlatform.isWeb) {
       bool isInMaintenance = MaintenanceHelper.isMaintenanceEnable();
 
       if (isInMaintenance) {
@@ -237,7 +295,11 @@ class SplashController extends GetxController implements GetxService {
     }
     if (Get.find<AuthController>().isLoggedIn()) {
       Get.find<AuthController>().updateToken();
-      if(Get.find<SplashController>().module != null && Get.find<SplashController>().module!.moduleType.toString() != AppConstants.ride ) {
+      if (Get.find<SplashController>().module != null &&
+          Get.find<SplashController>().module!.moduleType.toString() !=
+              AppConstants.ride &&
+          Get.find<SplashController>().module!.moduleType.toString() !=
+              AppConstants.buycar) {
         await Get.find<FavouriteController>().getFavouriteList();
       }
     }
@@ -250,13 +312,11 @@ class SplashController extends GetxController implements GetxService {
     }
   }
 
-
-
   Future<void> initSharedData() async {
-    if(!GetPlatform.isWeb) {
+    if (!GetPlatform.isWeb) {
       _module = null;
       splashServiceInterface.initSharedData();
-    }else {
+    } else {
       _module = await splashServiceInterface.initSharedData();
     }
     _cacheModule = splashServiceInterface.getCacheModule();
@@ -264,7 +324,9 @@ class SplashController extends GetxController implements GetxService {
   }
 
   void setCacheConfigModule(ModuleModel? cacheModule) {
-    _configModel!.moduleConfig!.module = Module.fromJson(_data!['module_config'][cacheModule!.moduleType]);
+    _configModel!.moduleConfig!.module = Module.fromJson(
+      _data!['module_config'][cacheModule!.moduleType],
+    );
   }
 
   bool? showIntro() {
@@ -307,7 +369,7 @@ class SplashController extends GetxController implements GetxService {
   /// inside `async` button handlers, where Flutter swallows the exception, so the
   /// button simply did nothing: no snackbar, no navigation, no error.
   Future<bool> activateModuleById(int? moduleId) async {
-    if(moduleId == null) return false;
+    if (moduleId == null) return false;
 
     // Refreshed unconditionally, exactly as the loops this replaces did. Reusing an
     // already-loaded list would change behaviour: a list left over from a previous
@@ -316,62 +378,81 @@ class SplashController extends GetxController implements GetxService {
     await getModules();
 
     final List<ModuleModel>? modules = _moduleList;
-    if(modules == null || modules.isEmpty) return false;
+    if (modules == null || modules.isEmpty) return false;
 
-    final int index = modules.indexWhere((ModuleModel module) => module.id == moduleId);
-    if(index == -1) return false;
+    final int index = modules.indexWhere(
+      (ModuleModel module) => module.id == moduleId,
+    );
+    if (index == -1) return false;
 
     await setModule(modules[index]);
     return true;
   }
 
-  Future<void> setModule(ModuleModel? module, {bool notify = true, bool fromModuleDialog = false}) async {
+  Future<void> setModule(
+    ModuleModel? module, {
+    bool notify = true,
+    bool fromModuleDialog = false,
+  }) async {
     _module = module;
     splashServiceInterface.setModule(module);
-    if(module != null) {
+    if (module != null) {
       // Deliberately no clearBanner() here: most callers set the module only to open
       // a detail page (store/item/category) and never reload home data — clearing
       // left the module page's banner slider stuck on its shimmer on return. The
       // genuine-switch flows clear and reload themselves (switchModule and the
       // deep-link path via clearDataNull + HomeScreen.loadData).
-      ShallowRouterHelper.updateParameter('module', module.slug != null ? module.slug.toString() : module.id.toString());
-      if(_configModel != null) {
-        _configModel!.moduleConfig!.module = Module.fromJson(_data!['module_config'][module.moduleType]);
+      ShallowRouterHelper.updateParameter(
+        'module',
+        module.slug != null ? module.slug.toString() : module.id.toString(),
+      );
+      if (_configModel != null) {
+        _configModel!.moduleConfig!.module = Module.fromJson(
+          _data!['module_config'][module.moduleType],
+        );
       }
       _cacheModule = await splashServiceInterface.setCacheModule(module);
       // The promotion broadcast topic is scoped to zone AND module, so switching vertical
       // moves the device to the new module's topic and leaves the old one.
       NotificationTopicHelper.syncCustomerTopic();
-      if((AuthHelper.isLoggedIn() || AuthHelper.isGuestLoggedIn()) && cacheModule != null) {
-        if(cacheModule!.moduleType.toString() == AppConstants.service) {
+      if ((AuthHelper.isLoggedIn() || AuthHelper.isGuestLoggedIn()) &&
+          cacheModule != null) {
+        if (cacheModule!.moduleType.toString() == AppConstants.service) {
           Get.find<ServiceCartController>().getServiceCartGroups();
           Get.find<BookingController>().getDashboardRunningBookings();
-        } else {
+        } else if (cacheModule!.moduleType.toString() != AppConstants.buycar) {
           Get.find<CartController>().getAllCarts();
         }
       }
     }
 
-    if(_cacheModule != null && _cacheModule!.moduleType.toString() == AppConstants.taxi) {
+    if (_cacheModule != null &&
+        _cacheModule!.moduleType.toString() == AppConstants.taxi) {
       Get.find<TaxiCartController>().getCarCartList();
     }
 
-    if(AuthHelper.isLoggedIn()) {
-      if(Get.find<SplashController>().module != null) {
-        Get.find<HomeController>().getCashBackOfferList();
-        if(Get.find<ProfileController>().userInfoModel?.proStatus ?? false) {
-          Get.find<ProController>().getProActiveOffer(moduleType: module?.moduleType);
+    if (AuthHelper.isLoggedIn()) {
+      if (Get.find<SplashController>().module != null) {
+        if (module?.moduleType.toString() != AppConstants.buycar) {
+          Get.find<HomeController>().getCashBackOfferList();
         }
-        if(module?.moduleType.toString() == AppConstants.taxi) {
+        if (Get.find<ProfileController>().userInfoModel?.proStatus ?? false) {
+          Get.find<ProController>().getProActiveOffer(
+            moduleType: module?.moduleType,
+          );
+        }
+        if (module?.moduleType.toString() == AppConstants.taxi) {
           Get.find<TaxiFavouriteController>().getFavouriteTaxiList();
-        } else if(module?.moduleType.toString() != AppConstants.ride) {
+        } else if (module?.moduleType.toString() != AppConstants.ride &&
+            module?.moduleType.toString() != AppConstants.buycar) {
           Get.find<FavouriteController>().getFavouriteList();
         }
-      } else if (_cacheModule != null && _cacheModule!.moduleType.toString() == AppConstants.taxi){
+      } else if (_cacheModule != null &&
+          _cacheModule!.moduleType.toString() == AppConstants.taxi) {
         Get.find<TaxiCartController>().getCarCartList();
       }
     }
-    if(notify) {
+    if (notify) {
       update();
     }
   }
@@ -381,39 +462,55 @@ class SplashController extends GetxController implements GetxService {
   /// item carries no module. Falls back to the active module's config, then to an empty one.
   Module getModuleConfig(String? moduleType) {
     final dynamic moduleConfig = _data?['module_config'];
-    dynamic config = (moduleConfig is Map && moduleType != null) ? moduleConfig[moduleType] : null;
-    if(config is! Map) {
-      final String? activeType = _module?.moduleType ?? _cacheModule?.moduleType;
-      config = (moduleConfig is Map && activeType != null) ? moduleConfig[activeType] : null;
+    dynamic config = (moduleConfig is Map && moduleType != null)
+        ? moduleConfig[moduleType]
+        : null;
+    if (config is! Map) {
+      final String? activeType =
+          _module?.moduleType ?? _cacheModule?.moduleType;
+      config = (moduleConfig is Map && activeType != null)
+          ? moduleConfig[activeType]
+          : null;
     }
 
     final Module module = config is Map
-        ? Module.fromJson(Map<String, dynamic>.from(config)) : Module();
+        ? Module.fromJson(Map<String, dynamic>.from(config))
+        : Module();
     module.newVariation = moduleType == 'food';
     return module;
   }
 
-  Future<bool> getModules({Map<String, String>? headers, DataSourceEnum dataSource = DataSourceEnum.local}) async {
+  Future<bool> getModules({
+    Map<String, String>? headers,
+    DataSourceEnum dataSource = DataSourceEnum.local,
+  }) async {
     _moduleIndex = 0;
     List<ModuleModel>? moduleList;
-    if(dataSource == DataSourceEnum.local) {
-      moduleList = await splashServiceInterface.getModules(headers: headers, source: DataSourceEnum.local);
+    if (dataSource == DataSourceEnum.local) {
+      moduleList = await splashServiceInterface.getModules(
+        headers: headers,
+        source: DataSourceEnum.local,
+      );
       getModules(headers: headers, dataSource: DataSourceEnum.client);
       return _prepareModuleList(moduleList);
     } else {
-      moduleList = await splashServiceInterface.getModules(headers: headers, source: DataSourceEnum.client);
+      moduleList = await splashServiceInterface.getModules(
+        headers: headers,
+        source: DataSourceEnum.client,
+      );
       return _prepareModuleList(moduleList);
     }
-
   }
 
   bool _prepareModuleList(List<ModuleModel>? moduleList) {
     if (moduleList != null) {
       _moduleList = [];
       for (var module in moduleList) {
-        if(module.moduleType != AppConstants.taxi && module.moduleType != AppConstants.ride && GetPlatform.isWeb) {
+        if (module.moduleType != AppConstants.taxi &&
+            module.moduleType != AppConstants.ride &&
+            GetPlatform.isWeb) {
           _moduleList!.add(module);
-        } else if(!GetPlatform.isWeb) {
+        } else if (!GetPlatform.isWeb) {
           _moduleList!.add(module);
         }
       }
@@ -431,27 +528,35 @@ class SplashController extends GetxController implements GetxService {
     // module's home data (HomeScreen.loadData) could load.
     final user = Get.find<ProfileController>().userInfoModel;
     final ModuleModel? module = _module;
-    if(user == null || module == null) {
+    if (user == null || module == null) {
       return;
     }
     final String moduleType = module.moduleType?.toString() ?? '';
-    final bool isInterestModule = moduleType == AppConstants.food || moduleType == AppConstants.pharmacy || moduleType == AppConstants.grocery || moduleType == AppConstants.ecommerce;
-    final bool alreadySelected = user.selectedModuleForInterest?.contains(module.id) ?? false;
-    if(!isInterestModule || alreadySelected) {
+    final bool isInterestModule =
+        moduleType == AppConstants.food ||
+        moduleType == AppConstants.pharmacy ||
+        moduleType == AppConstants.grocery ||
+        moduleType == AppConstants.ecommerce;
+    final bool alreadySelected =
+        user.selectedModuleForInterest?.contains(module.id) ?? false;
+    if (!isInterestModule || alreadySelected) {
       return;
     }
 
-    await Get.find<CategoryController>().getCategoryList(true, allCategory: false).then((_) async {
-      if(Get.find<CategoryController>().categoryList != null && Get.find<CategoryController>().categoryList!.isNotEmpty){
-        await Get.toNamed(RouteHelper.getPreferenceRoute());
-      }else{
-        Get.offAllNamed(RouteHelper.getInitialRoute());
-      }
-    });
+    await Get.find<CategoryController>()
+        .getCategoryList(true, allCategory: false)
+        .then((_) async {
+          if (Get.find<CategoryController>().categoryList != null &&
+              Get.find<CategoryController>().categoryList!.isNotEmpty) {
+            await Get.toNamed(RouteHelper.getPreferenceRoute());
+          } else {
+            Get.offAllNamed(RouteHelper.getInitialRoute());
+          }
+        });
   }
 
   void switchModule(int index, bool fromPhone) async {
-    if(_module == null || _module!.id != _moduleList![index].id) {
+    if (_module == null || _module!.id != _moduleList![index].id) {
       // ShadowRouterHelper.updateParameter('module_id', _moduleList![index].id.toString());
 
       // Mark this switch. setModule's synchronous prefix still updates _module +
@@ -461,7 +566,7 @@ class SplashController extends GetxController implements GetxService {
       final ModuleModel target = _moduleList![index];
 
       // Must precede the await: the tab repaints long before setModule returns.
-      if(target.moduleType.toString() != AppConstants.taxi) {
+      if (target.moduleType.toString() != AppConstants.taxi) {
         _clearModuleScopedData();
       }
 
@@ -469,33 +574,35 @@ class SplashController extends GetxController implements GetxService {
 
       // A newer switch superseded this one while we awaited — don't clear caches or
       // load data for a module that's no longer selected.
-      if(token != _moduleSwitchToken) return;
+      if (token != _moduleSwitchToken) return;
 
-      if(_module!.moduleType.toString() != AppConstants.taxi) {
+      // BuyCar loads its own catalogue on demand instead of hydrating commerce home data.
+      if (_module!.moduleType.toString() != AppConstants.taxi &&
+          _module!.moduleType.toString() != AppConstants.buycar) {
         // No cart or cashback fetch here: the awaited setModule above already issues
         // both for this module. Re-issuing them downloaded each payload twice, and
         // getAllCarts' _allCartsGeneration guard then discarded the second response
         // outright — the request was pure waste.
 
-        if(AuthHelper.isLoggedIn()) {
+        if (AuthHelper.isLoggedIn()) {
           // Defensive: the interest page must never block/skip the module data load.
           try {
             await _showInterestPage();
-          } catch(_) {}
+          } catch (_) {}
           // Re-check after the awaited interest page.
-          if(token != _moduleSwitchToken) return;
+          if (token != _moduleSwitchToken) return;
         }
 
         // Debounce the heavy load so continuous switching only fetches the module
         // the user lands on (avoids overlapping, wrong-module API responses).
         _moduleLoadDebounce?.cancel();
         _moduleLoadDebounce = Timer(const Duration(milliseconds: 350), () {
-          if(token == _moduleSwitchToken) {
+          if (token == _moduleSwitchToken) {
             HomeScreen.loadData(true, fromModule: true);
           }
         });
-      } else {
-        if(AuthHelper.isLoggedIn()) {
+      } else if (_module!.moduleType.toString() == AppConstants.taxi) {
+        if (AuthHelper.isLoggedIn()) {
           Get.find<HomeController>().getCashBackOfferList();
         }
         Get.find<TaxiCartController>().getCarCartList();
@@ -533,12 +640,12 @@ class SplashController extends GetxController implements GetxService {
     Get.find<BannerController>().getFeaturedBanner();
     getModules();
     Get.find<HomeController>().forcefullyNullCashBackOffers();
-    if(AuthHelper.isLoggedIn()) {
+    if (AuthHelper.isLoggedIn()) {
       Get.find<AddressController>().getAddressList();
     }
     Get.find<StoreController>().getFeaturedStoreList();
     Get.find<CampaignController>().itemAndBasicCampaignNull();
-    if(_deeplinkRoute != null) {
+    if (_deeplinkRoute != null) {
       setDeeplink(null);
       HomeScreen.loadData(false);
     }
@@ -551,10 +658,12 @@ class SplashController extends GetxController implements GetxService {
   Future<bool> subscribeMail(String email) async {
     _isLoading = true;
     update();
-    ResponseModel responseModel = await splashServiceInterface.subscribeEmail(email);
+    ResponseModel responseModel = await splashServiceInterface.subscribeEmail(
+      email,
+    );
     if (responseModel.isSuccess) {
       showCustomSnackBar(responseModel.message, isError: false);
-    }else {
+    } else {
       showCustomSnackBar(responseModel.message, isError: true);
     }
     _isLoading = false;
@@ -568,7 +677,7 @@ class SplashController extends GetxController implements GetxService {
     update();
   }
 
-  void getCookiesData(){
+  void getCookiesData() {
     _savedCookiesData = splashServiceInterface.getSavedCookiesData();
     update();
   }
@@ -577,8 +686,8 @@ class SplashController extends GetxController implements GetxService {
     splashServiceInterface.cookiesStatusChange(data);
   }
 
-  bool getAcceptCookiesStatus(String data) => splashServiceInterface.getAcceptCookiesStatus(data);
-
+  bool getAcceptCookiesStatus(String data) =>
+      splashServiceInterface.getAcceptCookiesStatus(data);
 
   void saveWebSuggestedLocationStatus(bool data) {
     splashServiceInterface.saveSuggestedLocationStatus(data);
@@ -586,7 +695,7 @@ class SplashController extends GetxController implements GetxService {
     update();
   }
 
-  void getWebSuggestedLocationStatus(){
+  void getWebSuggestedLocationStatus() {
     _webSuggestedLocation = splashServiceInterface.getSuggestedLocationStatus();
   }
 
@@ -601,7 +710,7 @@ class SplashController extends GetxController implements GetxService {
     update();
   }
 
-  void getReferBottomSheetStatus(){
+  void getReferBottomSheetStatus() {
     _showReferBottomSheet = splashServiceInterface.getReferBottomSheetStatus();
   }
 
@@ -618,8 +727,10 @@ class SplashController extends GetxController implements GetxService {
   }
 
   void clearDataNull(ModuleModel foundModule) {
-    if(foundModule.moduleType.toString() != AppConstants.taxi) {
-      Get.find<CartController>().getAllCarts();
+    if (foundModule.moduleType.toString() != AppConstants.taxi) {
+      if (foundModule.moduleType.toString() != AppConstants.buycar) {
+        Get.find<CartController>().getAllCarts();
+      }
       Get.find<ItemController>().clearItemLists();
       Get.find<BannerController>().clearBanner();
       Get.find<CategoryController>().clearCategoryList();
@@ -633,12 +744,13 @@ class SplashController extends GetxController implements GetxService {
   String? _pusherConnectionStatus;
   String? get pusherConnectionStatus => _pusherConnectionStatus;
 
-  void setPusherStatus(String? connection){
+  void setPusherStatus(String? connection) {
     _pusherConnectionStatus = connection;
   }
 
   Future<void> fetchAppDownloadSection() async {
-    AppDownloadSectionModel? appDownloadSectionModel = await splashServiceInterface.getAppDownloadSection();
+    AppDownloadSectionModel? appDownloadSectionModel =
+        await splashServiceInterface.getAppDownloadSection();
     if (appDownloadSectionModel == null) return;
     _appDownloadSection = appDownloadSectionModel;
     update();
@@ -652,6 +764,7 @@ class SplashController extends GetxController implements GetxService {
     return '';
   }
 
-  bool get showAppDownloadSection => (links?.playstoreUrl?.isNotEmpty ?? false) && (links?.appleStoreUrl?.isNotEmpty ?? false);
-
+  bool get showAppDownloadSection =>
+      (links?.playstoreUrl?.isNotEmpty ?? false) &&
+      (links?.appleStoreUrl?.isNotEmpty ?? false);
 }

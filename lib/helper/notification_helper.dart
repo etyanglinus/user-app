@@ -1007,18 +1007,7 @@ Future<dynamic> myBackgroundMessageHandler(RemoteMessage message) async {
 
   try {
     if (Firebase.apps.isEmpty) {
-      if (GetPlatform.isAndroid) {
-        await Firebase.initializeApp(
-          options: const FirebaseOptions(
-            apiKey: "AIzaSyCc3OCd5I2xSlnftZ4bFAbuCzMhgQHLivA",
-            appId: "1:491987943015:android:a6fb4303cc4bf3d18f1ec2",
-            messagingSenderId: "491987943015",
-            projectId: "stackmart-500c7",
-          ),
-        );
-      } else {
-        await Firebase.initializeApp();
-      }
+      await Firebase.initializeApp();
     }
 
     final FlutterLocalNotificationsPlugin backgroundPlugin = FlutterLocalNotificationsPlugin();

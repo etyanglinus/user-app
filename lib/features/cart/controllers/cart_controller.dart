@@ -501,9 +501,9 @@ class CartController extends GetxController implements GetxService {
     update();
     List<OnlineCartModel>? onlineCartList = await cartServiceInterface.addToCartOnline(cart, storeId: storeId);
     if(onlineCartList != null) {
-      SellerAnalytics.track(storeId ?? cart.storeId, 'add_to_cart');
       _cartList = [];
       _cartList.addAll(cartServiceInterface.formatOnlineCartToLocalCart(onlineCartModel: onlineCartList));
+      SellerAnalytics.track(storeId ?? cartStoreId, 'add_to_cart');
       calculationCart();
       success = true;
       await getAllCarts(notify: false);
@@ -520,7 +520,6 @@ class CartController extends GetxController implements GetxService {
     update();
     List<OnlineCartModel>? onlineCartList = await cartServiceInterface.updateCartOnline(cart, storeId: storeId);
     if(onlineCartList != null) {
-
       _cartList = [];
       _cartList.addAll(cartServiceInterface.formatOnlineCartToLocalCart(onlineCartModel: onlineCartList));
       calculationCart();

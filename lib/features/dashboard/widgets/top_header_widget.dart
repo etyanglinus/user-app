@@ -66,8 +66,9 @@ class DashboardAppBar extends StatelessWidget {
     // final bool showBackButton = onBackTap != null || !isHomeModule;
     final String? moduleType = Get.find<SplashController>().module?.moduleType?.toString();
     final bool isRentalModule = moduleType == AppConstants.taxi;
+    final bool isBuyCarModule = moduleType == AppConstants.buycar;
     // Rental uses its own cart (RantCartWidget) instead of the global CartWidget.
-    final bool showCart = !isParcelModule && moduleType != AppConstants.ride && !isRentalModule;
+    final bool showCart = !isParcelModule && moduleType != AppConstants.ride && !isRentalModule && !isBuyCarModule;
     return Center(
       child: SizedBox(
         width: Dimensions.webMaxWidth,

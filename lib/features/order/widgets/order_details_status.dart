@@ -29,6 +29,9 @@ class _OrderDetailsStatus extends StatelessWidget {
         && ongoing && !DateConverter.isBeforeTime(order.scheduleAt);
     final _StatusContent content = _StatusContent.resolve(order.orderType, order.orderStatus);
 
+    final awaitingRefund = order.manualRefundSettlementStatus == 'awaiting_payment';
+    final paidRefund = order.manualRefundSettlementStatus == 'paid';
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeLarge),
       child: Material(
@@ -64,19 +67,32 @@ class _OrderDetailsStatus extends StatelessWidget {
                     const SizedBox.shrink()
                   else
                     Text(
-                      content.title,
+                      awaitingRefund ? 'Refund approved'.tr : content.title,
                       style: robotoBold.copyWith(fontSize: Dimensions.fontSizeExtraLarge),
                     ),
 
                   const SizedBox(height: Dimensions.paddingSizeExtraSmall),
 
                   Text(
-                    content.sentence,
+                    awaitingRefund
+                        ? 'Your refund is awaiting payment.'.tr
+                        : paidRefund
+                            ? 'Your manual refund payment has been recorded.'.tr
+                            : content.sentence,
                     style: robotoRegular.copyWith(
                       fontSize: Dimensions.fontSizeSmall,
                       color: Theme.of(context).disabledColor,
                     ),
                   ),
+
+                  if (order.id != null && Get.find<AuthController>().isLoggedIn())
+                    TextButton(
+                      onPressed: () => showDialog<void>(
+                        context: context,
+                        builder: (_) => OrderSupportDialog(orderId: order.id!),
+                      ),
+                      child: Text('Order support'.tr),
+                    ),
 
                 ]),
               ),

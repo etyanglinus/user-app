@@ -21,6 +21,7 @@ import 'package:fasta_deliveries/features/parcel/screens/parcel_module_screen.da
 import 'package:fasta_deliveries/features/parcel/widgets/parcel_deliver_to_header_widget.dart';
 import 'package:fasta_deliveries/features/dashboard/modules/pharmacy/screens/pharmacy_module_screen.dart';
 import 'package:fasta_deliveries/features/rental_module/home/screens/rental_module_screen.dart';
+import 'package:fasta_deliveries/features/buycar/buycar_screen.dart';
 import 'package:fasta_deliveries/features/dashboard/modules/shop/screens/shop_module_screen.dart';
 import 'package:fasta_deliveries/features/ride_share_module/ride_home/screens/ride_home_screen.dart';
 import 'package:fasta_deliveries/features/ride_share_module/ride_order/controllers/ride_controller.dart';
@@ -40,8 +41,11 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMixin {
+class _MainScreenState extends State<MainScreen>
+    with AutomaticKeepAliveClientMixin {
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey<BuyCarScreenState> _buyCarScreenKey =
+      GlobalKey<BuyCarScreenState>();
   final GlobalKey _scrollViewKey = GlobalKey();
   final GlobalKey _searchHeaderKey = GlobalKey();
   final GlobalKey _exploreRestaurantFilterKey = GlobalKey();
@@ -50,7 +54,9 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
   final GlobalKey _pinnedExploreFilterKey = GlobalKey();
   bool _isSearchPinned = false;
   bool _isExploreRestaurantFilterPinned = false;
-  final ValueNotifier<double> _pinnedTopFilterScrollOutOffset = ValueNotifier(0);
+  final ValueNotifier<double> _pinnedTopFilterScrollOutOffset = ValueNotifier(
+    0,
+  );
   bool _showBackToTop = false;
   bool _isTopHeaderScrolledOut = false;
   static const double _backToTopThreshold = 400;
@@ -66,17 +72,26 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
     _scrollController.addListener(_handleScroll);
     AuthHelper.isLoggedIn();
 
-    HomeScreen.loadData(false).then((value) {
-      Get.find<SplashController>().getReferBottomSheetStatus();
-      if((Get.find<ProfileController>().userInfoModel?.isValidForDiscount??false) && Get.find<SplashController>().showReferBottomSheet) {
-        _showReferBottomSheet();
-      }
-    });
+    final splashController = Get.find<SplashController>();
+    final activeModule =
+        splashController.module ?? splashController.cacheModule;
+    if (activeModule?.moduleType != AppConstants.buycar) {
+      HomeScreen.loadData(false).then((value) {
+        Get.find<SplashController>().getReferBottomSheetStatus();
+        if ((Get.find<ProfileController>().userInfoModel?.isValidForDiscount ??
+                false) &&
+            Get.find<SplashController>().showReferBottomSheet) {
+          _showReferBottomSheet();
+        }
+      });
+    }
 
-    if(!ResponsiveHelper.isWeb()) {
+    if (!ResponsiveHelper.isWeb()) {
       Get.find<LocationController>().getZone(
-        AddressHelper.getUserAddressFromSharedPref()?.latitude??'',
-        AddressHelper.getUserAddressFromSharedPref()?.longitude??'', false, updateInAddress: true,
+        AddressHelper.getUserAddressFromSharedPref()?.latitude ?? '',
+        AddressHelper.getUserAddressFromSharedPref()?.longitude ?? '',
+        false,
+        updateInAddress: true,
       );
     }
   }
@@ -89,28 +104,39 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
   static const double _pinHysteresis = 4.0;
 
   void _handleScroll() {
-    if(!_scrollController.hasClients) {
+    if (!_scrollController.hasClients) {
       return;
     }
 
     final double? searchHeaderTop = _getSearchHeaderTop();
-    final bool isPinned = searchHeaderTop != null && (_isSearchPinned
-        ? searchHeaderTop <= _pinHysteresis
-        : searchHeaderTop <= 0);
+    final bool isPinned =
+        searchHeaderTop != null &&
+        (_isSearchPinned
+            ? searchHeaderTop <= _pinHysteresis
+            : searchHeaderTop <= 0);
     final double? exploreRestaurantFilterTop = _getExploreRestaurantFilterTop();
-    final double pinnedTopFilterScrollOutOffset = _getPinnedTopFilterScrollOutOffset(exploreRestaurantFilterTop);
-    final bool isExploreRestaurantFilterPinned = exploreRestaurantFilterTop != null && (_isExploreRestaurantFilterPinned
-        ? exploreRestaurantFilterTop <= SearchAndQuickFilterWidget.searchOnlyHeight + _pinHysteresis
-        : exploreRestaurantFilterTop <= SearchAndQuickFilterWidget.searchOnlyHeight);
-    final bool showBackToTop = _scrollController.position.pixels > _backToTopThreshold;
+    final double pinnedTopFilterScrollOutOffset =
+        _getPinnedTopFilterScrollOutOffset(exploreRestaurantFilterTop);
+    final bool isExploreRestaurantFilterPinned =
+        exploreRestaurantFilterTop != null &&
+        (_isExploreRestaurantFilterPinned
+            ? exploreRestaurantFilterTop <=
+                  SearchAndQuickFilterWidget.searchOnlyHeight + _pinHysteresis
+            : exploreRestaurantFilterTop <=
+                  SearchAndQuickFilterWidget.searchOnlyHeight);
+    final bool showBackToTop =
+        _scrollController.position.pixels > _backToTopThreshold;
     final bool isTopHeaderScrolledOut = _getIsTopHeaderScrolledOut();
 
     _pinnedTopFilterScrollOutOffset.value = pinnedTopFilterScrollOutOffset;
-    if(showBackToTop) {
+    if (showBackToTop) {
       _backToTopTop.value = _resolveBackToTopTop();
     }
 
-    if(isPinned != _isSearchPinned || isExploreRestaurantFilterPinned != _isExploreRestaurantFilterPinned || showBackToTop != _showBackToTop || isTopHeaderScrolledOut != _isTopHeaderScrolledOut) {
+    if (isPinned != _isSearchPinned ||
+        isExploreRestaurantFilterPinned != _isExploreRestaurantFilterPinned ||
+        showBackToTop != _showBackToTop ||
+        isTopHeaderScrolledOut != _isTopHeaderScrolledOut) {
       setState(() {
         _isSearchPinned = isPinned;
         _isExploreRestaurantFilterPinned = isExploreRestaurantFilterPinned;
@@ -123,33 +149,47 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
   bool _getIsTopHeaderScrolledOut() {
     final BuildContext? topHeaderContext = _topHeaderKey.currentContext;
     final BuildContext? scrollContext = _scrollViewKey.currentContext;
-    if(topHeaderContext == null || scrollContext == null) {
+    if (topHeaderContext == null || scrollContext == null) {
       return _isTopHeaderScrolledOut;
     }
 
     final RenderObject? topHeaderObject = topHeaderContext.findRenderObject();
     final RenderObject? scrollObject = scrollContext.findRenderObject();
-    if(topHeaderObject is! RenderBox || scrollObject is! RenderBox || !topHeaderObject.attached || !scrollObject.attached) {
+    if (topHeaderObject is! RenderBox ||
+        scrollObject is! RenderBox ||
+        !topHeaderObject.attached ||
+        !scrollObject.attached) {
       return _isTopHeaderScrolledOut;
     }
 
-    final double topHeaderBottom = topHeaderObject.localToGlobal(Offset(0, topHeaderObject.size.height)).dy - scrollObject.localToGlobal(Offset.zero).dy;
+    final double topHeaderBottom =
+        topHeaderObject
+            .localToGlobal(Offset(0, topHeaderObject.size.height))
+            .dy -
+        scrollObject.localToGlobal(Offset.zero).dy;
     return topHeaderBottom <= 0;
   }
 
   double _resolveBackToTopTop() {
-    final RenderObject? scrollObject = _scrollViewKey.currentContext?.findRenderObject();
-    if(scrollObject is! RenderBox || !scrollObject.attached) {
+    final RenderObject? scrollObject = _scrollViewKey.currentContext
+        ?.findRenderObject();
+    if (scrollObject is! RenderBox || !scrollObject.attached) {
       return _backToTopTop.value;
     }
 
     final double stackTop = scrollObject.localToGlobal(Offset.zero).dy;
-    final double searchBottom = _getPinnedOverlayBottom(_pinnedSearchKey, stackTop);
-    final double filterBottom = _getPinnedOverlayBottom(_pinnedExploreFilterKey, stackTop);
+    final double searchBottom = _getPinnedOverlayBottom(
+      _pinnedSearchKey,
+      stackTop,
+    );
+    final double filterBottom = _getPinnedOverlayBottom(
+      _pinnedExploreFilterKey,
+      stackTop,
+    );
     final double moduleHeaderBottom = _moduleOwnedPinnedHeaderHeight;
 
     double highest = searchBottom > filterBottom ? searchBottom : filterBottom;
-    if(moduleHeaderBottom > highest) {
+    if (moduleHeaderBottom > highest) {
       highest = moduleHeaderBottom;
     }
     return highest + _backToTopGap;
@@ -158,10 +198,10 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
   double _moduleOwnedPinnedHeaderHeight = 0;
 
   static double _pinnedHeaderHeightFor(String? moduleType) {
-    if(moduleType == AppConstants.parcel) {
+    if (moduleType == AppConstants.parcel) {
       return ParcelModuleScreen.pinnedHeaderHeight;
     }
-    if(moduleType == AppConstants.taxi) {
+    if (moduleType == AppConstants.taxi) {
       return RentalModuleScreen.pinnedHeaderHeight;
     }
     return 0;
@@ -169,18 +209,25 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
 
   double _getPinnedOverlayBottom(GlobalKey key, double stackTop) {
     final RenderObject? overlayObject = key.currentContext?.findRenderObject();
-    if(overlayObject is! RenderBox || !overlayObject.attached) {
+    if (overlayObject is! RenderBox || !overlayObject.attached) {
       return 0;
     }
 
-    return overlayObject.localToGlobal(Offset(0, overlayObject.size.height)).dy - stackTop;
+    return overlayObject
+            .localToGlobal(Offset(0, overlayObject.size.height))
+            .dy -
+        stackTop;
   }
 
   void _scrollToTop() {
     if (!_scrollController.hasClients) {
       return;
     }
-    _scrollController.animateTo(0, duration: const Duration(milliseconds: 400), curve: Curves.easeOut);
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOut,
+    );
   }
 
   bool _onScrollEnd(ScrollEndNotification notification) {
@@ -193,47 +240,59 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
   }
 
   double _getPinnedTopFilterScrollOutOffset(double? filterTop) {
-    if(filterTop == null) {
+    if (filterTop == null) {
       return 0;
     }
 
-    return (SearchAndQuickFilterWidget.height - filterTop).clamp(0, SearchAndQuickFilterWidget.topFilterHeight).toDouble();
+    return (SearchAndQuickFilterWidget.height - filterTop)
+        .clamp(0, SearchAndQuickFilterWidget.topFilterHeight)
+        .toDouble();
   }
 
   double? _getSearchHeaderTop() {
     final BuildContext? searchHeaderContext = _searchHeaderKey.currentContext;
     final BuildContext? scrollContext = _scrollViewKey.currentContext;
 
-    if(searchHeaderContext == null || scrollContext == null) {
+    if (searchHeaderContext == null || scrollContext == null) {
       return null;
     }
 
-    final RenderObject? searchHeaderObject = searchHeaderContext.findRenderObject();
+    final RenderObject? searchHeaderObject = searchHeaderContext
+        .findRenderObject();
     final RenderObject? scrollObject = scrollContext.findRenderObject();
 
-    if(searchHeaderObject is! RenderBox || scrollObject is! RenderBox || !searchHeaderObject.attached || !scrollObject.attached) {
+    if (searchHeaderObject is! RenderBox ||
+        scrollObject is! RenderBox ||
+        !searchHeaderObject.attached ||
+        !scrollObject.attached) {
       return null;
     }
 
-    return searchHeaderObject.localToGlobal(Offset.zero).dy - scrollObject.localToGlobal(Offset.zero).dy;
+    return searchHeaderObject.localToGlobal(Offset.zero).dy -
+        scrollObject.localToGlobal(Offset.zero).dy;
   }
 
   double? _getExploreRestaurantFilterTop() {
-    final BuildContext? filterContext = _exploreRestaurantFilterKey.currentContext;
+    final BuildContext? filterContext =
+        _exploreRestaurantFilterKey.currentContext;
     final BuildContext? scrollContext = _scrollViewKey.currentContext;
 
-    if(filterContext == null || scrollContext == null) {
+    if (filterContext == null || scrollContext == null) {
       return null;
     }
 
     final RenderObject? filterObject = filterContext.findRenderObject();
     final RenderObject? scrollObject = scrollContext.findRenderObject();
 
-    if(filterObject is! RenderBox || scrollObject is! RenderBox || !filterObject.attached || !scrollObject.attached) {
+    if (filterObject is! RenderBox ||
+        scrollObject is! RenderBox ||
+        !filterObject.attached ||
+        !scrollObject.attached) {
       return null;
     }
 
-    return filterObject.localToGlobal(Offset.zero).dy - scrollObject.localToGlobal(Offset.zero).dy;
+    return filterObject.localToGlobal(Offset.zero).dy -
+        scrollObject.localToGlobal(Offset.zero).dy;
   }
 
   @override
@@ -256,6 +315,8 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
       await HomeScreen.loadTaxiApis();
     } else if (moduleType == AppConstants.service) {
       await ServiceScreen.loadData();
+    } else if (moduleType == AppConstants.buycar) {
+      await _buyCarScreenKey.currentState?.refresh();
     } else {
       await HomeScreen.loadData(true, fromModule: true);
       LazyRefreshNotifier.bump();
@@ -269,56 +330,91 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
   }
 
   void _showReferBottomSheet() {
-    ResponsiveHelper.isDesktop(context) ? Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Dimensions.radiusExtraLarge)),
-        insetPadding: const EdgeInsets.all(22),
-        clipBehavior: Clip.antiAliasWithSaveLayer,
-        child: const ReferBottomSheetWidget(),
-      ),
-      useSafeArea: false,
-    ).then((value) => Get.find<SplashController>().saveReferBottomSheetStatus(false))
+    ResponsiveHelper.isDesktop(context)
+        ? Get.dialog(
+            Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(
+                  Dimensions.radiusExtraLarge,
+                ),
+              ),
+              insetPadding: const EdgeInsets.all(22),
+              clipBehavior: Clip.antiAliasWithSaveLayer,
+              child: const ReferBottomSheetWidget(),
+            ),
+            useSafeArea: false,
+          ).then(
+            (value) =>
+                Get.find<SplashController>().saveReferBottomSheetStatus(false),
+          )
         : showModalBottomSheet(
-      isScrollControlled: true, useRootNavigator: true, context: Get.context!,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(topLeft: Radius.circular(Dimensions.radiusExtraLarge), topRight: Radius.circular(Dimensions.radiusExtraLarge)),
-      ),
-      builder: (context) {
-        return ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.8),
-          child: const ReferBottomSheetWidget(),
-        );
-      },
-    ).then((value) => Get.find<SplashController>().saveReferBottomSheetStatus(false));
+            isScrollControlled: true,
+            useRootNavigator: true,
+            context: Get.context!,
+            backgroundColor: Colors.white,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(Dimensions.radiusExtraLarge),
+                topRight: Radius.circular(Dimensions.radiusExtraLarge),
+              ),
+            ),
+            builder: (context) {
+              return ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.8,
+                ),
+                child: const ReferBottomSheetWidget(),
+              );
+            },
+          ).then(
+            (value) =>
+                Get.find<SplashController>().saveReferBottomSheetStatus(false),
+          );
   }
 
   ModuleModel _getSelectedModuleSelection(SplashController splashController) {
-
     final int selectedIndex = splashController.selectedModuleIndex;
-    if(selectedIndex == 0) {
+    if (selectedIndex == 0) {
       return const ModuleModel(label: 'Home');
     }
 
     int tabIndex = 1;
-    if(splashController.moduleList != null && splashController.moduleList!.isNotEmpty) {
-      for(int index = 0; index < splashController.moduleList!.length; index++) {
+    if (splashController.moduleList != null &&
+        splashController.moduleList!.isNotEmpty) {
+      for (
+        int index = 0;
+        index < splashController.moduleList!.length;
+        index++
+      ) {
         final module = splashController.moduleList![index];
-        final String moduleType = splashController.moduleList![index].moduleType?.toString() ?? '';
-        if(selectedIndex == tabIndex) {
-          return ModuleModel(label: _moduleLabel(module.moduleName, moduleType), moduleType: moduleType);
+        final String moduleType =
+            splashController.moduleList![index].moduleType?.toString() ?? '';
+        if (selectedIndex == tabIndex) {
+          return ModuleModel(
+            label: _moduleLabel(module.moduleName, moduleType),
+            moduleType: moduleType,
+          );
         }
         tabIndex++;
       }
     } else {
-      if(selectedIndex == 1) {
+      if (selectedIndex == 1) {
         return const ModuleModel(label: 'Food', moduleType: AppConstants.food);
-      } else if(selectedIndex == 2) {
-        return const ModuleModel(label: 'Grocery', moduleType: AppConstants.grocery);
-      } else if(selectedIndex == 3) {
-        return const ModuleModel(label: 'Shop', moduleType: AppConstants.ecommerce);
-      } else if(selectedIndex == 4) {
-        return const ModuleModel(label: 'Pharmacy', moduleType: AppConstants.pharmacy);
+      } else if (selectedIndex == 2) {
+        return const ModuleModel(
+          label: 'Grocery',
+          moduleType: AppConstants.grocery,
+        );
+      } else if (selectedIndex == 3) {
+        return const ModuleModel(
+          label: 'Shop',
+          moduleType: AppConstants.ecommerce,
+        );
+      } else if (selectedIndex == 4) {
+        return const ModuleModel(
+          label: 'Pharmacy',
+          moduleType: AppConstants.pharmacy,
+        );
       }
     }
 
@@ -326,19 +422,19 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
   }
 
   String _moduleLabel(String? moduleName, String moduleType) {
-    if(moduleName != null && moduleName.trim().isNotEmpty) {
+    if (moduleName != null && moduleName.trim().isNotEmpty) {
       return moduleName;
     }
 
-    if(moduleType == AppConstants.food) {
+    if (moduleType == AppConstants.food) {
       return 'Food';
-    } else if(moduleType == AppConstants.grocery) {
+    } else if (moduleType == AppConstants.grocery) {
       return 'Grocery';
-    } else if(moduleType == AppConstants.ecommerce) {
+    } else if (moduleType == AppConstants.ecommerce) {
       return 'Shop';
-    } else if(moduleType == AppConstants.pharmacy) {
+    } else if (moduleType == AppConstants.pharmacy) {
       return 'Pharmacy';
-    } else if(moduleType == AppConstants.ride) {
+    } else if (moduleType == AppConstants.ride) {
       return 'rideshare';
     }
 
@@ -348,146 +444,261 @@ class _MainScreenState extends State<MainScreen> with AutomaticKeepAliveClientMi
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return GetBuilder<SplashController>(builder: (splashController) {
-      final bool isSingleModule = splashController.moduleList != null && splashController.moduleList!.length == 1;
+    return GetBuilder<SplashController>(
+      builder: (splashController) {
+        final bool isSingleModule =
+            splashController.moduleList != null &&
+            splashController.moduleList!.length == 1;
 
-      ModuleModel selectedModule = _getSelectedModuleSelection(splashController);
-      if (isSingleModule) {
-        if (selectedModule.moduleType == null) {
-          final singleModule = splashController.moduleList![0];
-          final String moduleType = singleModule.moduleType?.toString() ?? '';
-          selectedModule = ModuleModel(label: _moduleLabel(singleModule.moduleName, moduleType), moduleType: moduleType);
+        ModuleModel selectedModule = _getSelectedModuleSelection(
+          splashController,
+        );
+        if (isSingleModule) {
+          if (selectedModule.moduleType == null) {
+            final singleModule = splashController.moduleList![0];
+            final String moduleType = singleModule.moduleType?.toString() ?? '';
+            selectedModule = ModuleModel(
+              label: _moduleLabel(singleModule.moduleName, moduleType),
+              moduleType: moduleType,
+            );
+          }
+          if (splashController.selectedModuleIndex != 1) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) splashController.selectModuleByTabIndex(1);
+            });
+          }
         }
-        if (splashController.selectedModuleIndex != 1) {
+
+        final String? selectedModuleType = selectedModule.moduleType;
+        _moduleOwnedPinnedHeaderHeight = _pinnedHeaderHeightFor(
+          selectedModuleType,
+        );
+        final bool isHomeModule = selectedModuleType == null;
+        final bool isParcelModule = selectedModuleType == AppConstants.parcel;
+        final bool isServiceModule = selectedModuleType == AppConstants.service;
+        final bool showPinnedSearch = _isSearchPinned;
+        final bool showPinnedExploreRestaurantFilter =
+            !isHomeModule &&
+            _isSearchPinned &&
+            _isExploreRestaurantFilterPinned;
+
+        final bool isDark = Get.find<ThemeController>().darkTheme;
+        final Color topStatusBarColor = Color.alphaBlend(
+          Theme.of(context).disabledColor.withAlpha(30),
+          Theme.of(context).cardColor,
+        );
+        final Color statusBarColor =
+            (_isSearchPinned || _isTopHeaderScrolledOut)
+            ? Theme.of(context).cardColor
+            : topStatusBarColor;
+
+        if (!ResponsiveHelper.isWeb()) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) splashController.selectModuleByTabIndex(1);
+            if (mounted) {
+              HomeStatusBarTint.color.value = statusBarColor;
+            }
           });
         }
-      }
 
-      final String? selectedModuleType = selectedModule.moduleType;
-      _moduleOwnedPinnedHeaderHeight = _pinnedHeaderHeightFor(selectedModuleType);
-      final bool isHomeModule = selectedModuleType == null;
-      final bool isParcelModule = selectedModuleType == AppConstants.parcel;
-      final bool isServiceModule = selectedModuleType == AppConstants.service;
-      final bool showPinnedSearch = _isSearchPinned;
-      final bool showPinnedExploreRestaurantFilter = !isHomeModule && _isSearchPinned && _isExploreRestaurantFilterPinned;
-
-      final bool isDark = Get.find<ThemeController>().darkTheme;
-      final Color topStatusBarColor = Color.alphaBlend(
-        Theme.of(context).disabledColor.withAlpha(30),
-        Theme.of(context).cardColor,
-      );
-      final Color statusBarColor = (_isSearchPinned || _isTopHeaderScrolledOut) ? Theme.of(context).cardColor : topStatusBarColor;
-
-      if (!ResponsiveHelper.isWeb()) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            HomeStatusBarTint.color.value = statusBarColor;
-          }
-        });
-      }
-
-      return AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle(
-          statusBarColor: statusBarColor,
-          statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-          statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
-        ),
-        child: Scaffold(
-        extendBody: true,
-        backgroundColor: Theme.of(context).cardColor,
-        body: Column(
-          children: [
-            Container(height: MediaQuery.paddingOf(context).top, color: statusBarColor),
-            Expanded(child: SafeArea(
-              top: false,
-              bottom: false,
-              child: Stack(
-                clipBehavior: Clip.hardEdge,
-                children: [
-              NotificationListener<ScrollEndNotification>(
-                onNotification: _onScrollEnd,
-                child: RefreshIndicator(
-                onRefresh: () => _onRefresh(selectedModule),
-                child: CustomScrollView(
-                  key: _scrollViewKey,
-                  controller: _scrollController,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  slivers: [
-                    SliverToBoxAdapter(child: TopHeaderWidget(key: _topHeaderKey, isHomeModule: isHomeModule, isParcelModule: isParcelModule, showModuleTabs: !isSingleModule)),
-
-                    if(isHomeModule) HomeNewScreen(searchHeaderKey: _searchHeaderKey, isSearchPinned: _isSearchPinned),
-                    if(selectedModuleType == AppConstants.grocery) GroceryModuleScreen(searchHeaderKey: _searchHeaderKey, exploreRestaurantKey: _exploreRestaurantFilterKey, scrollController: _scrollController, isSearchPinned: _isSearchPinned,),
-                    if(selectedModuleType == AppConstants.pharmacy) PharmacyModuleScreen(searchHeaderKey: _searchHeaderKey, exploreRestaurantKey: _exploreRestaurantFilterKey, scrollController: _scrollController, isSearchPinned: _isSearchPinned,),
-                    if(selectedModuleType == AppConstants.ecommerce) ShopModuleScreen(searchHeaderKey: _searchHeaderKey, exploreRestaurantKey: _exploreRestaurantFilterKey, scrollController: _scrollController, isSearchPinned: _isSearchPinned,),
-                    if(selectedModuleType == AppConstants.food) FoodModuleScreen(searchHeaderKey: _searchHeaderKey, exploreRestaurantKey: _exploreRestaurantFilterKey, scrollController: _scrollController, isSearchPinned: _isSearchPinned,),
-                    if(selectedModuleType == AppConstants.parcel) ParcelModuleScreen(searchHeaderKey: _searchHeaderKey, exploreRestaurantKey: _exploreRestaurantFilterKey,),
-                    if(selectedModuleType == AppConstants.taxi) RentalModuleScreen(searchHeaderKey: _searchHeaderKey, exploreRestaurantKey: _exploreRestaurantFilterKey,),
-                    if(selectedModuleType == AppConstants.ride) const RideHomeScreen(),
-                    if(selectedModuleType == AppConstants.service) ServiceScreen(searchHeaderKey: _searchHeaderKey, exploreRestaurantKey: _exploreRestaurantFilterKey, scrollController: _scrollController, isSearchPinned: _isSearchPinned),
-                  ],
-                ),
-              ),
-              ),
-
-              if(showPinnedSearch)
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: Column(
-                    key: _pinnedSearchKey,
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if(isParcelModule) const ParcelDeliverToHeaderWidget(),
-                      ValueListenableBuilder<double>(
-                        valueListenable: _pinnedTopFilterScrollOutOffset,
-                        builder: (context, topFilterScrollOutOffset, _) => SearchAndQuickFilterWidget(isPinned: true, showQuickFilters: !isHomeModule, topFilterScrollOutOffset: isHomeModule ? 0 : topFilterScrollOutOffset, isHomeModule: isHomeModule, showBottomDivider: !showPinnedExploreRestaurantFilter,
-                          quickFilterItems: isServiceModule ? ServiceScreen.serviceQuickFilterItems : null,
-                          onQuickFilterTap: isServiceModule ? ServiceScreen.handleQuickFilterTap : null,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-              if(showPinnedExploreRestaurantFilter)
-                Positioned(
-                  top: SearchAndQuickFilterWidget.searchOnlyHeight,
-                  left: 0,
-                  right: 0,
-                  child: KeyedSubtree(
-                    key: _pinnedExploreFilterKey,
-                    child: isServiceModule
-                        ? const ServiceExploreCategoryTabHeaderWidget(showBottomDivider: true)
-                        : const FoodModuleExploreRestaurantFilterHeaderWidget(showBottomDivider: true),
-                  ),
-                ),
-
-              if(selectedModuleType == AppConstants.ride)
-                GetBuilder<RideController>(builder: (rideController) =>
-                rideController.tripDetails != null || rideController.rideDetails != null
-                    ? const Positioned(
-                  right: 20,
-                  bottom: 100,
-                  child: _RideTrackButton(),
-                )
-                    : const SizedBox(),
-                ),
-
-              ValueListenableBuilder<double>(
-                valueListenable: _backToTopTop,
-                builder: (context, top, _) => BackToTopButton(visible: _showBackToTop, onTap: _scrollToTop, top: top),
-              ),
-            ],
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: SystemUiOverlayStyle(
+            statusBarColor: statusBarColor,
+            statusBarIconBrightness: isDark
+                ? Brightness.light
+                : Brightness.dark,
+            statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
           ),
-        )),
-          ],
-        ),
-        ));
-    });
+          child: Scaffold(
+            extendBody: true,
+            backgroundColor: Theme.of(context).cardColor,
+            body: Column(
+              children: [
+                Container(
+                  height: MediaQuery.paddingOf(context).top,
+                  color: statusBarColor,
+                ),
+                Expanded(
+                  child: SafeArea(
+                    top: false,
+                    bottom: false,
+                    child: Stack(
+                      clipBehavior: Clip.hardEdge,
+                      children: [
+                        NotificationListener<ScrollEndNotification>(
+                          onNotification: _onScrollEnd,
+                          child: RefreshIndicator(
+                            onRefresh: () => _onRefresh(selectedModule),
+                            child: CustomScrollView(
+                              key: _scrollViewKey,
+                              controller: _scrollController,
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              slivers: [
+                                SliverToBoxAdapter(
+                                  child: TopHeaderWidget(
+                                    key: _topHeaderKey,
+                                    isHomeModule: isHomeModule,
+                                    isParcelModule: isParcelModule,
+                                    showModuleTabs: !isSingleModule,
+                                  ),
+                                ),
+
+                                if (isHomeModule)
+                                  HomeNewScreen(
+                                    searchHeaderKey: _searchHeaderKey,
+                                    isSearchPinned: _isSearchPinned,
+                                  ),
+                                if (selectedModuleType == AppConstants.grocery)
+                                  GroceryModuleScreen(
+                                    searchHeaderKey: _searchHeaderKey,
+                                    exploreRestaurantKey:
+                                        _exploreRestaurantFilterKey,
+                                    scrollController: _scrollController,
+                                    isSearchPinned: _isSearchPinned,
+                                  ),
+                                if (selectedModuleType == AppConstants.pharmacy)
+                                  PharmacyModuleScreen(
+                                    searchHeaderKey: _searchHeaderKey,
+                                    exploreRestaurantKey:
+                                        _exploreRestaurantFilterKey,
+                                    scrollController: _scrollController,
+                                    isSearchPinned: _isSearchPinned,
+                                  ),
+                                if (selectedModuleType ==
+                                    AppConstants.ecommerce)
+                                  ShopModuleScreen(
+                                    searchHeaderKey: _searchHeaderKey,
+                                    exploreRestaurantKey:
+                                        _exploreRestaurantFilterKey,
+                                    scrollController: _scrollController,
+                                    isSearchPinned: _isSearchPinned,
+                                  ),
+                                if (selectedModuleType == AppConstants.food)
+                                  FoodModuleScreen(
+                                    searchHeaderKey: _searchHeaderKey,
+                                    exploreRestaurantKey:
+                                        _exploreRestaurantFilterKey,
+                                    scrollController: _scrollController,
+                                    isSearchPinned: _isSearchPinned,
+                                  ),
+                                if (selectedModuleType == AppConstants.parcel)
+                                  ParcelModuleScreen(
+                                    searchHeaderKey: _searchHeaderKey,
+                                    exploreRestaurantKey:
+                                        _exploreRestaurantFilterKey,
+                                  ),
+                                if (selectedModuleType == AppConstants.taxi)
+                                  RentalModuleScreen(
+                                    searchHeaderKey: _searchHeaderKey,
+                                    exploreRestaurantKey:
+                                        _exploreRestaurantFilterKey,
+                                  ),
+                                if (selectedModuleType == AppConstants.buycar)
+                                  BuyCarScreen(key: _buyCarScreenKey),
+                                if (selectedModuleType == AppConstants.ride)
+                                  const RideHomeScreen(),
+                                if (selectedModuleType == AppConstants.service)
+                                  ServiceScreen(
+                                    searchHeaderKey: _searchHeaderKey,
+                                    exploreRestaurantKey:
+                                        _exploreRestaurantFilterKey,
+                                    scrollController: _scrollController,
+                                    isSearchPinned: _isSearchPinned,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        if (showPinnedSearch)
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            child: Column(
+                              key: _pinnedSearchKey,
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (isParcelModule)
+                                  const ParcelDeliverToHeaderWidget(),
+                                ValueListenableBuilder<double>(
+                                  valueListenable:
+                                      _pinnedTopFilterScrollOutOffset,
+                                  builder:
+                                      (
+                                        context,
+                                        topFilterScrollOutOffset,
+                                        _,
+                                      ) => SearchAndQuickFilterWidget(
+                                        isPinned: true,
+                                        showQuickFilters: !isHomeModule,
+                                        topFilterScrollOutOffset: isHomeModule
+                                            ? 0
+                                            : topFilterScrollOutOffset,
+                                        isHomeModule: isHomeModule,
+                                        showBottomDivider:
+                                            !showPinnedExploreRestaurantFilter,
+                                        quickFilterItems: isServiceModule
+                                            ? ServiceScreen
+                                                  .serviceQuickFilterItems
+                                            : null,
+                                        onQuickFilterTap: isServiceModule
+                                            ? ServiceScreen.handleQuickFilterTap
+                                            : null,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                        if (showPinnedExploreRestaurantFilter)
+                          Positioned(
+                            top: SearchAndQuickFilterWidget.searchOnlyHeight,
+                            left: 0,
+                            right: 0,
+                            child: KeyedSubtree(
+                              key: _pinnedExploreFilterKey,
+                              child: isServiceModule
+                                  ? const ServiceExploreCategoryTabHeaderWidget(
+                                      showBottomDivider: true,
+                                    )
+                                  : const FoodModuleExploreRestaurantFilterHeaderWidget(
+                                      showBottomDivider: true,
+                                    ),
+                            ),
+                          ),
+
+                        if (selectedModuleType == AppConstants.ride)
+                          GetBuilder<RideController>(
+                            builder: (rideController) =>
+                                rideController.tripDetails != null ||
+                                    rideController.rideDetails != null
+                                ? const Positioned(
+                                    right: 20,
+                                    bottom: 100,
+                                    child: _RideTrackButton(),
+                                  )
+                                : const SizedBox(),
+                          ),
+
+                        ValueListenableBuilder<double>(
+                          valueListenable: _backToTopTop,
+                          builder: (context, top, _) => BackToTopButton(
+                            visible: _showBackToTop,
+                            onTap: _scrollToTop,
+                            top: top,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 
@@ -498,7 +709,8 @@ class _RideTrackButton extends StatefulWidget {
   State<_RideTrackButton> createState() => _RideTrackButtonState();
 }
 
-class _RideTrackButtonState extends State<_RideTrackButton> with SingleTickerProviderStateMixin {
+class _RideTrackButtonState extends State<_RideTrackButton>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
 
   @override
@@ -519,7 +731,10 @@ class _RideTrackButtonState extends State<_RideTrackButton> with SingleTickerPro
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Get.find<RideController>().getCurrentRideStatus(fromRefresh: true, showCustomLoader: true),
+      onTap: () => Get.find<RideController>().getCurrentRideStatus(
+        fromRefresh: true,
+        showCustomLoader: true,
+      ),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -538,7 +753,11 @@ class _RideTrackButtonState extends State<_RideTrackButton> with SingleTickerPro
                 ),
               ],
             ),
-            child: Icon(Icons.directions_car_rounded, size: 24, color: Theme.of(context).cardColor),
+            child: Icon(
+              Icons.directions_car_rounded,
+              size: 24,
+              color: Theme.of(context).cardColor,
+            ),
           ),
           // Red dot with ripple animation at top-right
           Positioned(
@@ -550,13 +769,19 @@ class _RideTrackButtonState extends State<_RideTrackButton> with SingleTickerPro
                 // Expanding ripple 1
                 ScaleTransition(
                   scale: Tween<double>(begin: 0.8, end: 2.0).animate(
-                    CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+                    CurvedAnimation(
+                      parent: _animationController,
+                      curve: Curves.easeOut,
+                    ),
                   ),
                   child: Container(
                     height: 14,
                     width: 14,
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.red.withValues(alpha: 0.3), width: 1.5),
+                      border: Border.all(
+                        color: Colors.red.withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -573,7 +798,10 @@ class _RideTrackButtonState extends State<_RideTrackButton> with SingleTickerPro
                     height: 14,
                     width: 14,
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.red.withValues(alpha: 0.2), width: 1),
+                      border: Border.all(
+                        color: Colors.red.withValues(alpha: 0.2),
+                        width: 1,
+                      ),
                       shape: BoxShape.circle,
                     ),
                   ),

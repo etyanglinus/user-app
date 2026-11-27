@@ -32,6 +32,7 @@ import 'package:fasta_deliveries/features/order/widgets/order_details_info_widge
 import 'package:fasta_deliveries/features/order/widgets/order_details_info_widgets/prescription_section.dart';
 import 'package:fasta_deliveries/features/order/widgets/order_details_info_widgets/scheduled_order_banner.dart';
 import 'package:fasta_deliveries/features/order/widgets/order_status_history_sheet.dart';
+import 'package:fasta_deliveries/features/order/widgets/order_support_dialog.dart';
 import 'package:fasta_deliveries/features/order/widgets/parcel_cancelation/cancellation_reason_bottom_sheet.dart';
 import 'package:fasta_deliveries/features/order/widgets/parcel_cancelation/slider_button_widget.dart';
 import 'package:fasta_deliveries/features/pro/domain/models/pro_active_offer_model.dart';
