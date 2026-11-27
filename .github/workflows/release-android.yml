@@ -1,0 +1,106 @@
+name: Android release to Google Play
+
+# Builds a release-signed App Bundle and uploads it to Play's internal testing track.
+# Promote internal → production in Play Console yourself; nothing here touches production.
+#
+# Run it: push a tag like v5.0.2, or Actions → "Android release to Google Play" → Run workflow.
+# Secrets: KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD (upload key) and
+# PLAY_SERVICE_ACCOUNT_JSON (Play Console service account with release permission).
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      track:
+        description: Play track
+        type: choice
+        options: [internal, alpha, beta]
+        default: internal
+
+concurrency:
+  group: android-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  PACKAGE_NAME: com.fasta.fasta_rides_userapp
+  # versionCode must always increase. Starts above the codes already uploaded by hand.
+  VERSION_CODE_BASE: 100
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    environment: play-store
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.9'
+          channel: stable
+          cache: true
+
+      - name: Check secrets
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          [ -n "$KEYSTORE_BASE64" ] || { echo "::error::KEYSTORE_BASE64 secret missing"; exit 1; }
+          [ -n "$PLAY_JSON" ] || { echo "::error::PLAY_SERVICE_ACCOUNT_JSON secret missing"; exit 1; }
+
+      - name: Upload key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/release.jks
+          printf 'storeFile=release.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' "$KEYSTORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > android/key.properties
+
+      - run: flutter pub get
+
+      - name: Analyze and test
+        run: |
+          flutter analyze --no-fatal-infos --no-fatal-warnings
+          if find test -name '*_test.dart' | grep -q .; then
+            flutter test --file-reporter json:test-report.json || true
+            python3 .github/scripts/flutter_ratchet.py test-report.json test/ci/known-failures.txt
+          fi
+
+      - name: Build App Bundle
+        run: flutter build appbundle --release --build-number=$((VERSION_CODE_BASE + GITHUB_RUN_NUMBER))
+
+      - name: Confirm package and signer
+        run: |
+          AAB=build/app/outputs/bundle/release/app-release.aab
+          keytool -printcert -jarfile "$AAB" | grep -E "Owner|SHA256:" | tee -a "$GITHUB_STEP_SUMMARY"
+          unzip -p "$AAB" base/manifest/AndroidManifest.xml | strings | grep -q "$PACKAGE_NAME" \
+            || { echo "::error::Bundle is not $PACKAGE_NAME"; exit 1; }
+
+      - name: Upload to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: ${{ env.PACKAGE_NAME }}
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          track: ${{ inputs.track || 'internal' }}
+          status: completed
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aab-${{ github.run_number }}
+          path: build/app/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+      - name: Remove key material
+        if: always()
+        run: rm -f android/app/release.jks android/key.properties
