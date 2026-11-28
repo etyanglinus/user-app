@@ -246,6 +246,7 @@ import 'package:fasta_deliveries/features/ride_share_module/ride_location/domain
 import 'package:fasta_deliveries/features/ride_share_module/ride_location/domain/services/search_location_service.dart';
 import 'package:fasta_deliveries/features/ride_share_module/ride_location/domain/services/search_location_service_interface.dart';
 import 'package:fasta_deliveries/features/ride_share_module/ride_order/controllers/ride_controller.dart';
+import 'package:fasta_deliveries/features/ride_share_module/ride_order/controllers/ride_journey_controller.dart';
 import 'package:fasta_deliveries/features/ride_share_module/ride_order/domain/repositories/ride_order_repository.dart';
 import 'package:fasta_deliveries/features/ride_share_module/ride_order/domain/repositories/ride_order_repository_interface.dart';
 import 'package:fasta_deliveries/features/ride_share_module/ride_order/domain/services/ride_order_service.dart';
@@ -751,6 +752,7 @@ Future<Map<String, Map<String, String>>> init() async {
   Get.lazyPut(() => RideHomeController(rideHomeServiceInterface: Get.find()));
   Get.lazyPut(() => MapController());
   Get.lazyPut(() => RideController(rideOrderServiceInterface: Get.find()));
+  Get.lazyPut(() => RideJourneyController(apiClient: Get.find()), fenix: true);
   Get.lazyPut(() => TripController(tripServiceInterface: Get.find()));
   Get.lazyPut(() => SafetyAlertController(safetyAlertServiceInterface: Get.find()));
   Get.lazyPut(() => RidePaymentController(ridePaymentServiceInterface: Get.find()));

@@ -33,6 +33,12 @@ class RideHomeController extends GetxController implements GetxService {
   bool get rideSubmitted => _rideSubmitted;
 
   String? _requestReference;
+
+  String? _requestedRideId;
+
+  /// The ride just requested, for the trip screen.
+
+  String? get requestedRideId => _requestedRideId;
   String? get requestReference => _requestReference;
 
   String? _errorMessage;
@@ -70,6 +76,7 @@ class RideHomeController extends GetxController implements GetxService {
     _hasEstimatedFare = false;
     _rideSubmitted = false;
     _requestReference = null;
+    _requestedRideId = null;
     update();
 
     final response = await rideHomeServiceInterface.estimateFare(
@@ -148,6 +155,7 @@ class RideHomeController extends GetxController implements GetxService {
       final dynamic payload = ResponseParser.payloadOf(response.body);
       if (payload is Map) {
         _requestReference = payload['ref_id']?.toString();
+        _requestedRideId = payload['id']?.toString();
       }
       _rideSubmitted = true;
       _fareOptions = <FareModel>[];
