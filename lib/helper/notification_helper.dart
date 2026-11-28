@@ -16,12 +16,10 @@ import 'package:fasta_deliveries/features/service_module/custom_service_request/
 import 'package:fasta_deliveries/features/rental_module/rental_order/controllers/taxi_order_controller.dart';
 import 'package:fasta_deliveries/features/rental_module/rental_order/screens/taxi_order_details_screen.dart';
 import 'package:fasta_deliveries/features/ride_share_module/common/controllers/map_controller.dart';
-import 'package:fasta_deliveries/features/ride_share_module/common/widgets/confirmation_trip_dialog.dart';
 import 'package:fasta_deliveries/features/ride_share_module/ride_home/widgets/driver_request_dialog.dart';
 import 'package:fasta_deliveries/features/ride_share_module/ride_order/controllers/ride_controller.dart';
 import 'package:fasta_deliveries/features/ride_share_module/ride_order/screens/ride_order_complete_screen.dart';
 import 'package:fasta_deliveries/features/ride_share_module/ride_payment/screens/ride_payment_screen.dart';
-import 'package:fasta_deliveries/features/ride_share_module/safety_alert/controllers/safety_alert_controller.dart';
 import 'package:fasta_deliveries/features/happy_hour/controllers/happy_hour_controller.dart';
 import 'package:fasta_deliveries/features/happy_hour/screens/happy_hour_screen.dart';
 import 'package:fasta_deliveries/features/splash/controllers/splash_controller.dart';
@@ -32,6 +30,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fasta_deliveries/util/app_constants.dart';
 import 'package:get/get.dart';
+import 'package:fasta_deliveries/features/ride_share_module/ride_order/controllers/ride_journey_controller.dart';
+import 'package:fasta_deliveries/features/ride_share_module/ride_order/screens/ride_tracking_screen.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:fasta_deliveries/features/dashboard/screens/dashboard_screen.dart';
@@ -104,108 +104,18 @@ class NotificationHelper {
       if (kDebugMode) {
         print('pusher Disconnected: $pusherDisConnected [${Get.find<SplashController>().pusherConnectionStatus == null} || ${Get.find<SplashController>().pusherConnectionStatus} || ${Get.find<SplashController>().configModel!.webSocketStatus == false}]');
       }
-      /// For Ride Share
-      if (message.data['action'] == 'customer_driver_on_the_way' && pusherDisConnected) {
-        print('=======from notification=====1===');
-        Get.back();
-        Get.find<RideController>().getRideDetails(
-            message.data['ride_request_id']).then((value) {
-          if (value.statusCode == 200) {
-            Get.find<RideController>().updateRideCurrentState(RideState.acceptingRider);
-            Get.find<RideController>().startLocationRecord();
-            Get.find<MapController>().notifyMapController();
-            // if(Get.currentRoute == '/MapScreen') {
-            //   Get.back();
-            // }
-            Get.to(() => const MapScreen(fromScreen: MapScreenType.splash));
-          }
-        });
-      }
-      else if (message.data['action'] == 'customer_trip_started' && message.data['type'] == 'ride_request' && pusherDisConnected) {
-        Get.find<SafetyAlertController>().checkDriverNeedSafety();
-        Get.find<RideController>().updateRideCurrentState(RideState.ongoingRide);
-        Get.find<RideController>().getCurrentRideStatus(navigateToMap: true);
-
-      }
-      else if ((message.data['action'] == 'customer_trip_resumed' || message.data['action'] == 'customer_trip_paused') && message.data['type'] == 'ride_request') {
-        Get.find<RideController>().getRideDetails(message.data['ride_request_id']);
-      }
-      else if (message.data['action'] == 'payment_successful') {
-        if (message.data['type'] == 'ride_request') {
-          Get.off(() => RideOrderCompleteScreen(tripId: message.data['ride_request_id']));
-          Get.find<RideController>().tripDetails = null;
-        }
-      }
-      else if (message.data['action'] == 'customer_trip_completed' && message.data['type'] == 'ride_request' && pusherDisConnected) {
-        Get.find<SafetyAlertController>().cancelDriverNeedSafetyStream();
-        Get.dialog(
-          const ConfirmationTripDialog(isStartedTrip: false),
-          barrierDismissible: false,
-        );
-        Get.find<RideController>().getFinalFare(message.data['ride_request_id']).then((value) {
-          if (value.statusCode == 200) {
-            Get.find<RideController>().updateRideCurrentState(RideState.completeRide);
-            Get.find<MapController>().notifyMapController();
-            Get.back();
-            Get.off(() => RidePaymentScreen(rideId: message.data['ride_request_id']));
-          }
-        });
-      }
-      else if (message.data['action'] == 'customer_trip_canceled' && message.data['type'] == 'ride_request' && pusherDisConnected) {
-        Get.find<SafetyAlertController>().cancelDriverNeedSafetyStream();
-        Get.find<RideController>().getCurrentRide();
-        await Get.find<RideController>().getCurrentRideStatus(fromRefresh: true, showWarningToast: false);
-        if(Get.currentRoute == '/MapScreen') {
-          Get.off(() => RideOrderCompleteScreen(tripId: message.data['ride_request_id']));
+      /// Ride share: refresh the ride screen showing this ride (it moves itself on to
+      /// payment / rating); otherwise show the notification so a tap opens the ride.
+      if (message.data['type'] == 'ride_request') {
+        final String? rideId = (message.data['ride_request_id'] ?? message.data['trip_id'])?.toString();
+        final RideJourneyController journey = Get.find<RideJourneyController>();
+        if (rideId != null && rideId.isNotEmpty && journey.ride?.id == rideId) {
+          journey.refreshRide();
         } else {
-          Get.to(() => RideOrderCompleteScreen(tripId: message.data['ride_request_id']));
+          NotificationHelper.showNotification(message, flutterLocalNotificationsPlugin);
         }
+        return;
       }
-      else if (message.data['action'] == 'driver_trip_request_canceled' && message.data['type'] == 'ride_request' && pusherDisConnected) {
-        Get.find<RideController>().getCurrentRide();
-        Get.find<RideController>().stopLocationRecord();
-        Get.find<SafetyAlertController>().cancelDriverNeedSafetyStream();
-        Get.offAllNamed(RouteHelper.getInitialRoute(fromSplash: false));
-      }
-      else if (message.data['action'] == 'driver_customer_canceled_trip' && message.data['type'] == 'ride_request' && pusherDisConnected) {
-        Get.find<SafetyAlertController>().cancelDriverNeedSafetyStream();
-        Get.find<RideController>().getCurrentRide();
-        await Get.find<RideController>().getCurrentRideStatus(fromRefresh: true);
-        Get.offAllNamed(RouteHelper.getInitialRoute(fromSplash: false));
-      }
-      else if (message.data['action'] == 'driver_received_new_bid') {
-        Get.find<RideController>().getBiddingList(
-            message.data['ride_request_id'], 1).then((value) {
-          if (value.statusCode == 200) {
-            Get.find<RideController>().biddingList.length != 1 ? Get.back() : null;
-
-            Get.dialog(
-                barrierDismissible: true,
-                barrierColor: Colors.black.withValues(alpha: 0.5),
-                transitionDuration: const Duration(milliseconds: 500),
-                DriverRideRequestDialog(tripId: message.data['ride_request_id'])
-            );
-          }
-        });
-      }
-      else if (message.data['action'] == 'driver_canceled_ride_request') {
-        Get.find<RideController>().getBiddingList(
-            message.data['ride_request_id'], 1).then((value) {
-          if (value.statusCode == 200) {
-            if (Get.find<RideController>().biddingList.isEmpty && Get.isDialogOpen!) {
-              Get.back();
-            }
-          }
-        });
-      }
-      else if (message.data['action'] == 'referral_reward_received') {
-        ///
-      } else if (message.data['action'] == 'safety_problem_resolved') {
-        Get.find<SafetyAlertController>().getSafetyAlertDetails(message.data['ride_request_id']);
-      } else if( message.data['action'] == 'customer_payment_successful' && Get.currentRoute.contains('/RidePaymentScreen')) {
-        Get.offAll(() => RideOrderCompleteScreen(tripId: message.data['ride_request_id'], fromNotification: true));
-      }
-
 
       ///Existing Notifications
 
@@ -891,96 +801,12 @@ class NotificationHelper {
     }
   }
 
+  /// A tapped ride notification opens that ride; the journey screens move on by themselves
+  /// (trip → payment → rating) from the ride's current state.
   static void _executeRideRequestAction(Map<String,dynamic> data, bool formSplash) {
-    if(data['action'] == 'customer_driver_on_the_way'){
-      Get.back();
-      Get.find<RideController>().getRideDetails(data['ride_request_id']).then((value) {
-        if (value.statusCode == 200) {
-          Get.find<RideController>().updateRideCurrentState(RideState.acceptingRider);
-          Get.find<RideController>().startLocationRecord();
-          Get.find<MapController>().notifyMapController();
-          if(Get.currentRoute != '/MapScreen'){
-            _toRoute(formSplash, const MapScreen(fromScreen: MapScreenType.splash));
-          }
-        }
-      });
-
-    } else if(data['action'] == 'customer_trip_started'){
-      Get.find<SafetyAlertController>().checkDriverNeedSafety();
-      Get.find<RideController>().updateRideCurrentState(RideState.ongoingRide);
-      Get.find<RideController>().updateRideController();
-      print('------current route: ${Get.currentRoute}');
-      if(Get.currentRoute != '/MapScreen'){
-        _toRoute(formSplash, const MapScreen(fromScreen: MapScreenType.splash));
-      }
-
-    } else if(data['action'] == 'customer_trip_resumed' || data['action'] == 'customer_trip_paused'){
-      print('-----step---1');
-      notificationToRouteNavigate(data['ride_request_id'], formSplash);
-
-    } else if(data['action'] == 'payment_successful'){
-      if(Get.currentRoute != '/RideOrderCompleteScreen'){
-        Get.off(() => RideOrderCompleteScreen(tripId: data['ride_request_id']));
-        Get.find<RideController>().tripDetails = null;
-      }
-
-    } else if(data['action'] == 'customer_trip_completed'){
-      Get.find<SafetyAlertController>().cancelDriverNeedSafetyStream();
-      Get.dialog(
-        const ConfirmationTripDialog(isStartedTrip: false),
-        barrierDismissible: false,
-      );
-      Get.find<RideController>().getFinalFare(data['ride_request_id']).then((value) {
-        if (value.statusCode == 200) {
-          Get.find<RideController>().updateRideCurrentState(RideState.completeRide);
-          Get.find<MapController>().notifyMapController();
-          Get.back();
-          if(Get.currentRoute != '/RidePaymentScreen'){
-            Get.off(() => RidePaymentScreen(rideId: data['ride_request_id']));
-          }
-        }
-      });
-
-    } else if(data['action'] == 'customer_trip_canceled'){
-      Get.find<SafetyAlertController>().cancelDriverNeedSafetyStream();
-      Get.find<RideController>().getCurrentRideStatus(fromRefresh: true, showWarningToast: false);
-      // Get.offAllNamed(RouteHelper.getInitialRoute(fromSplash: false));
-      if(Get.currentRoute == '/MapScreen') {
-        Get.off(() => RideOrderCompleteScreen(tripId: data['ride_request_id']));
-      } else {
-        Get.to(() => RideOrderCompleteScreen(tripId: data['ride_request_id']));
-      }
-    } else if(data['action'] == 'driver_received_new_bid'){
-      Get.find<RideController>().getBiddingList(data['ride_request_id'], 1).then((value) {
-        if (value.statusCode == 200) {
-          Get.find<RideController>().biddingList.length != 1 ? Get.back() : null;
-
-          print('======bid gotten=====');
-          Get.dialog(
-              barrierDismissible: true,
-              barrierColor: Colors.black.withValues(alpha:0.5),
-              transitionDuration: const Duration(milliseconds: 500),
-              DriverRideRequestDialog(tripId: data['ride_request_id'])
-          );
-        }
-      });
-
-    } else if(data['action'] == 'driver_canceled_ride_request'){
-      Get.find<RideController>().getBiddingList(data['ride_request_id'], 1).then((value) {
-        if (value.statusCode == 200) {
-          if(Get.find<RideController>().biddingList.isEmpty && Get.isDialogOpen!){
-            Get.back();
-          }
-        }
-      });
-
-    } else if(data['action'] == 'referral_reward_received'){
-      // Get.find<ReferAndEarnController>().getEarningHistoryList(1);
-      // Get.find<ProfileController>().getProfileInfo();
-
-    } else if(data['action'] == 'safety_problem_resolved'){
-      Get.find<SafetyAlertController>().getSafetyAlertDetails(data['ride_request_id']);
-    }
+    final String? rideId = (data['ride_request_id'] ?? data['trip_id'])?.toString();
+    if (rideId == null || rideId.isEmpty || rideId == 'null') return;
+    _toRoute(formSplash, RideTrackingScreen(rideId: rideId));
   }
 
 }
