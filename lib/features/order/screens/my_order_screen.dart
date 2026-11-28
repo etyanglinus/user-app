@@ -23,6 +23,7 @@ import 'package:fasta_deliveries/features/ride_share_module/ride_location/domain
 import 'package:fasta_deliveries/features/ride_share_module/ride_order/controllers/ride_controller.dart';
 import 'package:fasta_deliveries/features/ride_share_module/ride_order/screens/ride_order_complete_screen.dart';
 import 'package:fasta_deliveries/features/ride_share_module/ride_payment/screens/ride_payment_screen.dart';
+import 'package:fasta_deliveries/features/ride_share_module/ride_order/screens/ride_tracking_screen.dart';
 import 'package:fasta_deliveries/features/service_module/booking_details/controllers/booking_controller.dart';
 import 'package:fasta_deliveries/features/service_module/booking_details/domain/models/booking_model.dart';
 import 'package:fasta_deliveries/features/service_module/booking_details/domain/services/booking_service_interface.dart';
@@ -1379,7 +1380,7 @@ class _RideItemCard extends StatelessWidget {
     final bool isRunning = ride.currentStatus != AppConstants.completed
         && ride.currentStatus != AppConstants.cancelled;
     if(isRunning) {
-      await Get.find<RideController>().getCurrentRideStatus(fromRefresh: true);
+      await Get.to(() => RideTrackingScreen(rideId: ride.id!));
       return;
     }
     final bool unpaid = ride.paymentStatus == 'unpaid'
@@ -1388,7 +1389,6 @@ class _RideItemCard extends StatelessWidget {
       if(ride.currentStatus == AppConstants.cancelled && ride.tripStatus?.ongoing == null) {
         Get.to(() => RideOrderCompleteScreen(tripId: ride.id!, fromRideList: true));
       } else {
-        Get.find<RideController>().getFinalFare(ride.id!);
         Get.to(() => RidePaymentScreen(rideId: ride.id!));
       }
     } else {

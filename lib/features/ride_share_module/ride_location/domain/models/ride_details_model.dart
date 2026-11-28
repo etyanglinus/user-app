@@ -152,41 +152,41 @@ class RideDetails {
     driver = json['driver'] != null ? Driver.fromJson(json['driver']) : null;
     vehicle = json['vehicle'] != null ? Vehicle.fromJson(json['vehicle']) : null;
     vehicleCategory = json['vehicle_category'] != null ? VehicleCategory.fromJson(json['vehicle_category']) : null;
-    estimatedFare = json['estimated_fare'] != null ? double.parse(json['estimated_fare'].toString()) : 0;
+    estimatedFare = _toDouble(json['estimated_fare']) ?? 0;
     orgEstFare = json['org_est_fare'].toString();
     estimatedTime = json['estimated_time'].toString();
-    estimatedDistance = json['estimated_distance'].toDouble();
-    actualFare = json['actual_fare'].toDouble();
-    discountActualFare = json['discount_actual_fare'].toDouble();
+    estimatedDistance = _toDouble(json['estimated_distance']);
+    actualFare = _toDouble(json['actual_fare']);
+    discountActualFare = _toDouble(json['discount_actual_fare']);
     actualTime = json['actual_time'].toString();
     actualDistance = json['actual_distance'].toString();
     waitingTime = json['waiting_time'].toString();
     idleTime = json['idle_time'].toString();
     waitingFare = json['waiting_fare'].toString();
     if(json['idle_fee'] != null){
-      idleFee = json['idle_fee'].toDouble();
+      idleFee = _toDouble(json['idle_fee']);
     }
     if(json['delay_fee'] != null){
-      delayFee = json['delay_fee'].toDouble();
+      delayFee = _toDouble(json['delay_fee']);
     }
     if(json['cancellation_fee'] != null){
-      cancellationFee = json['cancellation_fee'].toDouble();
+      cancellationFee = _toDouble(json['cancellation_fee']);
     }
     if(json['distance_wise_fare'] != null){
-      distanceWiseFare = json['distance_wise_fare'].toDouble();
+      distanceWiseFare = _toDouble(json['distance_wise_fare']);
     }
     if(json['return_fee'] != null){
-      returnFee = json['return_fee'].toDouble();
+      returnFee = _toDouble(json['return_fee']);
     }
-    dueAmount = json['due_amount'].toDouble();
+    dueAmount = _toDouble(json['due_amount']);
 
     cancelledBy = json['cancelled_by'];
     if(json['vat_tax'] != null){
-      vatTax = json['vat_tax'].toDouble();
+      vatTax = _toDouble(json['vat_tax']);
     }
 
     if(json['tips'] != null){
-      tips = json['tips'].toDouble();
+      tips = _toDouble(json['tips']);
     }
     additionalCharge = json['additional_charge'].toString();
     pickupCoordinates = json['pickup_coordinates'] != null ? PickupCoordinates.fromJson(json['pickup_coordinates']) : null;
@@ -198,7 +198,7 @@ class RideDetails {
     paymentMethod = json['payment_method'];
     if(json['coupon_amount'] != null){
       try{
-        couponAmount = json['coupon_amount'].toDouble();
+        couponAmount = _toDouble(json['coupon_amount']);
       }catch(e){
         couponAmount = double.tryParse(json['coupon_amount'].toString())??0;
       }
@@ -220,9 +220,9 @@ class RideDetails {
     currentStatus = json['current_status'];
     if(json['paid_fare'] != null){
       try{
-        paidFare = json['paid_fare'].toDouble();
+        paidFare = _toDouble(json['paid_fare']);
       }catch(e){
-        paidFare = double.parse(json['paid_fare'].toString());
+        paidFare = _toDouble(json['paid_fare']);
       }
     }
 
@@ -329,11 +329,11 @@ class Driver {
     lastName = json['last_name'];
     email = json['email'];
     phone = json['phone'];
-    rating = json['rating']?.toDouble();
-    reviews = json['total_review'];
+    rating = _toDouble(json['rating'] ?? json['avg_rating']);
+    reviews = json['total_review'] ?? json['total_reviews'];
     identificationNumber = json['identification_number'];
     identificationType = json['identification_type'];
-    profileImage = json['profile_image'];
+    profileImage = json['profile_image'] ?? json['image'];
     vehicle = json['vehicle'] != null ? Vehicle.fromJson(json['vehicle']) : null;
 
   }
@@ -365,15 +365,16 @@ class Vehicle {
         this.createdAt});
 
   Vehicle.fromJson(Map<String, dynamic> json) {
-    model = json['model'] != null ? Model.fromJson(json['model']) : null;
+    model = json['model'] is Map ? Model.fromJson(Map<String, dynamic>.from(json['model']))
+        : (json['model'] != null ? Model(name: [json['brand'], json['model']].whereType<String>().join(' ')) : null);
     licencePlateNumber = json['licence_plate_number'];
     licenceExpireDate = json['licence_expire_date'];
     vinNumber = json['vin_number'];
     transmission = json['transmission'];
     fuelType = json['fuel_type'];
     ownership = json['ownership'];
-    documents = json['documents'].cast<String>();
-    isActive = json['is_active'] ? 1 : 0;
+    documents = (json['documents'] as List?)?.map((e) => e.toString()).toList();
+    isActive = (json['is_active'] == true || json['is_active'] == 1) ? 1 : 0;
     createdAt = json['created_at'];
   }
 
@@ -428,7 +429,7 @@ class Model {
     engine = json['engine'];
     description = json['description'];
     image = json['image'];
-    isActive = json['is_active'] ? 1 : 0;
+    isActive = (json['is_active'] == true || json['is_active'] == 1) ? 1 : 0;
     createdAt = json['created_at'];
   }
 
@@ -456,7 +457,7 @@ class PickupCoordinates {
 
   PickupCoordinates.fromJson(Map<String, dynamic> json) {
     type = json['type'];
-    coordinates = json['coordinates'].cast<double>();
+    coordinates = (json['coordinates'] as List?)?.map((e) => _toDouble(e) ?? 0).toList();
   }
 
   Map<String, dynamic> toJson() {
@@ -479,7 +480,7 @@ class ParcelInformation {
     parcelCategoryId = json['parcel_category_id'];
     parcelCategoryName = json['parcel_category_name'];
     payer = json['payer'];
-    weight = json['weight'].toDouble();
+    weight = _toDouble(json['weight']);
   }
 
 }
@@ -551,3 +552,6 @@ class DriverSafetyAlert {
     tripStatusWhenMakeAlert = json['trip_status_when_make_alert'];
   }
 }
+
+/// Numbers arrive as int, double, numeric string or not at all.
+double? _toDouble(dynamic value) => value == null ? null : (value is num ? value.toDouble() : double.tryParse(value.toString()));

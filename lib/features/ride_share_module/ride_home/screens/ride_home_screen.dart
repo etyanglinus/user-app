@@ -1,3 +1,4 @@
+import 'package:fasta_deliveries/features/ride_share_module/ride_order/screens/ride_tracking_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:fasta_deliveries/features/address/domain/models/address_model.dart';
 import 'package:fasta_deliveries/features/location/screens/pick_map_screen.dart';
@@ -128,10 +129,15 @@ class _RideHomeScreenState extends State<RideHomeScreen> {
                     isRequesting: controller.isRequestingRide,
                     onRequest: () async {
                       if (await controller.requestRide(fare)) {
-                        Get.snackbar(
-                          'Ride requested',
-                          'Your request has been sent to nearby drivers.',
-                        );
+                        final String? rideId = controller.requestedRideId;
+                        if (rideId != null) {
+                          Get.to(() => RideTrackingScreen(rideId: rideId));
+                        } else {
+                          Get.snackbar(
+                            'Ride requested',
+                            'Your request has been sent to nearby drivers.',
+                          );
+                        }
                       }
                     },
                   ),

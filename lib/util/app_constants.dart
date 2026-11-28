@@ -337,6 +337,7 @@ class AppConstants {
   static const String estimatedFare =
       '/api/v1/rideshare/customer/ride/get-estimated-fare';
   static const String tripDetails = '/api/v1/rideshare/customer/ride/details/';
+  static const String rideCancel = '/api/v1/rideshare/customer/ride/cancel';
   static const String updateTripStatus =
       '/api/v1/rideshare/customer/ride/update-status/';
   static const String remainDistance =
