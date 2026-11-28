@@ -15,17 +15,22 @@ class ServiceModel {
 
   ServiceModel({this.totalSize, this.limit, this.offset, this.services, this.categories});
 
-  factory ServiceModel.fromJson(Map<String, dynamic> json) => ServiceModel(
-    totalSize: int.tryParse(json['total_size']?.toString() ?? ''),
-    limit: int.tryParse(json['limit']?.toString() ?? ''),
-    offset: int.tryParse(json['offset']?.toString() ?? ''),
-    services: (json['services'] as List<dynamic>?)
+  // Accepts the flat shape (`services`, `total_size`, `limit`, `offset`) and the
+  // enveloped one (`data` + `pagination`). Flat `services` wins when both are present.
+  factory ServiceModel.fromJson(Map<String, dynamic> json) {
+    final Map? pagination = json['pagination'] is Map ? json['pagination'] as Map : null;
+    return ServiceModel(
+    totalSize: int.tryParse((json['total_size'] ?? pagination?['total'])?.toString() ?? ''),
+    limit: int.tryParse((json['limit'] ?? pagination?['per_page'])?.toString() ?? ''),
+    offset: int.tryParse((json['offset'] ?? pagination?['current_page'])?.toString() ?? ''),
+    services: ((json['services'] ?? json['data']) as List<dynamic>?)
         ?.map((e) => Service.fromJson(e as Map<String, dynamic>))
         .toList(),
     categories: (json['categories'] as List<dynamic>?)
         ?.map((e) => ServiceCategoryModel.fromJson(e as Map<String, dynamic>))
         .toList(),
-  );
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'total_size': totalSize,

@@ -334,7 +334,7 @@ class TripDetails {
         ? VehicleDetails.fromJson(json['vehicle_details'])
         : null;
     calculatedPrice = json['calculated_price']?.toDouble();
-    licensePlateNumber = json['license_plate_number'].cast<String>();
+    licensePlateNumber = (json['license_plate_number'] as List?)?.map((e) => e.toString()).toList();
   }
 
   Map<String, dynamic> toJson() {
@@ -439,11 +439,11 @@ class VehicleDetails {
     providerId = json['provider_id'];
     brandId = json['brand_id'];
     categoryId = json['category_id'];
-    model = json['model'];
+    model = json['model']?.toString();
     type = json['type'];
-    engineCapacity = json['engine_capacity'];
-    enginePower = json['engine_power'];
-    seatingCapacity = json['seating_capacity'];
+    engineCapacity = json['engine_capacity']?.toString();
+    enginePower = json['engine_power']?.toString();
+    seatingCapacity = json['seating_capacity']?.toString();
     airCondition = json['air_condition'];
     fuelType = json['fuel_type'];
     transmissionType = json['transmission_type'];
@@ -467,8 +467,8 @@ class VehicleDetails {
     zoneId = json['zone_id'];
     // rating = int.tryParse(json['rating'].toString()) ?? json['rating'];
     thumbnailFullUrl = json['thumbnail_full_url'];
-    imagesFullUrl = json['images_full_url'].cast<String>();
-    documentsFullUrl = json['documents_full_url'].cast<String>();
+    imagesFullUrl = (json['images_full_url'] as List?)?.map((e) => e.toString()).toList();
+    documentsFullUrl = (json['documents_full_url'] as List?)?.map((e) => e.toString()).toList();
   }
 
   Map<String, dynamic> toJson() {

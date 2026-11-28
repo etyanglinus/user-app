@@ -1,0 +1,3 @@
+# Flutter tests failing on main, to triage. CI fails on any other failing test.
+# Expects "50 × 20 × 10 in (medium weight · 10 - 20 kg)"; the widget renders "…in, medium weight · …". Product copy decision.
+renders both dimension and weight in RichText

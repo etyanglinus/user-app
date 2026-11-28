@@ -50,7 +50,9 @@ android {
 
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("release") // or "release" if you have real keystore
+            // Release key when android/key.properties exists (CI writes it from secrets), else the
+            // debug key so local and staging builds still install. Play needs the release key.
+            signingConfig = if (keystorePropertiesFile.exists()) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
         }
     }
 }
