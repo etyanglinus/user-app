@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fasta_deliveries/features/cms/cms_content.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:fasta_deliveries/common/controllers/theme_controller.dart';
@@ -541,6 +542,7 @@ class _MainScreenState extends State<MainScreen>
                                     showModuleTabs: !isSingleModule,
                                   ),
                                 ),
+                                const SliverToBoxAdapter(child: CmsAnnouncementBanner()),
 
                                 if (isHomeModule)
                                   HomeNewScreen(
