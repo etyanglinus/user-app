@@ -14,10 +14,11 @@ class AppConstants {
   static const String fontFamily = 'DMSans';
   static const bool payInWevView = false;
   static const int balanceInputLen = 10;
-  static const String webHostedUrl = 'https://6ammart-react.6amtech.com';
+  static const String webHostedUrl = 'https://web.fastadeliveries.co.ke';
   static const bool stopPolylineAnimation = false;
   static const String googleServerClientId =
-      '491987943015-agln6biv84krpnngdphj87jkko7r9lb8.apps.googleusercontent.com';
+      '833886382257-4h58fqsoor8sl3euktnsmg87fdo2c0n7.apps.googleusercontent.com
+';
   static const String pusherBroadcustUrl = '/api/v1/broadcasting/user-auth';
 
   static const String baseUrl = 'https://fastadeliveries.co.ke';
@@ -693,24 +694,6 @@ class AppConstants {
       languageName: 'English',
       countryCode: 'US',
       languageCode: 'en',
-    ),
-    LanguageModel(
-      imageUrl: Images.arabic,
-      languageName: 'عربى',
-      countryCode: 'SA',
-      languageCode: 'ar',
-    ),
-    LanguageModel(
-      imageUrl: Images.spanish,
-      languageName: 'Spanish',
-      countryCode: 'ES',
-      languageCode: 'es',
-    ),
-    LanguageModel(
-      imageUrl: Images.bengali,
-      languageName: 'Bengali',
-      countryCode: 'BN',
-      languageCode: 'bn',
     ),
   ];
 
