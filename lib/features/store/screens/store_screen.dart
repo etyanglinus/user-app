@@ -1,3 +1,4 @@
+import 'package:fasta_deliveries/helper/ml_events.dart';
 import 'package:fasta_deliveries/helper/seller_analytics.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -122,6 +123,7 @@ class _StoreScreenState extends State<StoreScreen> {
   void initState() {
     super.initState();
     SellerAnalytics.track(widget.store?.id, 'page_view');
+    MlEvents.instance.track('view', entityType: 'store', entityId: widget.store?.id);
     initDataCall();
     if (widget.fromGlobalCart) {
       WidgetsBinding.instance.addPostFrameCallback((_) {

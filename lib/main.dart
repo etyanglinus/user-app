@@ -1,3 +1,4 @@
+import 'package:fasta_deliveries/helper/ml_events.dart';
 import 'dart:async';
 import 'dart:ui';
 import 'package:app_links/app_links.dart';
@@ -181,6 +182,7 @@ class _MyAppState extends State<MyApp> {
             routingCallback: (routing) {
               HomeStatusBarTint.modalOpen.value = routing != null && ((routing.isBottomSheet ?? false) || (routing.isDialog ?? false));
               if (routing == null || (routing.isBottomSheet ?? false) || (routing.isDialog ?? false)) return;
+              MlEvents.instance.screen(routing.current);
               if (Get.isRegistered<ProController>()) {
                 Get.find<ProController>().maybeShowRenewOnRoute(routing.current);
               }
