@@ -303,6 +303,8 @@ class _MenuScreenState extends State<MenuScreen> {
                   child: Column(children: [
                     PortionWidget(icon: Images.chatIcon, title: 'live_chat'.tr, route: RouteHelper.getConversationRoute()),
                     PortionWidget(icon: Images.helpIcon, title: 'help_and_support'.tr, route: RouteHelper.getSupportRoute()),
+                    PortionWidget(icon: Images.helpIcon, title: 'help_and_faqs'.tr, route: RouteHelper.cmsFaq),
+                    PortionWidget(icon: Images.aboutIcon, title: 'news_and_updates'.tr, route: RouteHelper.cmsNews),
                     // PortionWidget(icon: Images.aboutIcon, title: 'about_us'.tr, route: RouteHelper.getHtmlRoute('about-us')),
                     PortionWidget(icon: Images.termsIcon, title: 'terms_conditions'.tr, route: RouteHelper.termsAndCondition),
                     PortionWidget(icon: Images.privacyIcon, title: 'privacy_policy'.tr, route: RouteHelper.privacyPolicy),

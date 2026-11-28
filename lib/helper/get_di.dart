@@ -1,3 +1,5 @@
+import 'package:fasta_deliveries/helper/ml_events.dart';
+import 'package:fasta_deliveries/helper/address_helper.dart';
 
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -344,6 +346,19 @@ Future<Map<String, Map<String, String>>> init() async {
   final sharedPreferences = await SharedPreferences.getInstance();
   Get.lazyPut(() => sharedPreferences);
   Get.lazyPut(() => ApiClient(appBaseUrl: AppConstants.baseUrl, sharedPreferences: Get.find()));
+  final mlEvents = MlEvents.instance;
+  mlEvents.moduleId = () => int.tryParse(Get.find<ApiClient>().getHeader()[AppConstants.moduleId] ?? '');
+  mlEvents.zoneId = () => AddressHelper.getUserAddressFromSharedPref()?.zoneId;
+  mlEvents.init(
+      prefs: sharedPreferences,
+      baseUrl: AppConstants.baseUrl,
+      headers: () {
+        // Only the auth token: the backend derives the customer from it; no other header is needed.
+        final auth = Get.find<ApiClient>().getHeader()['Authorization'];
+        return {if (auth != null && auth != 'Bearer null') 'Authorization': auth};
+      },
+      appVersion: AppConstants.appVersionName,
+    );
 
   /// Repository interface
   CheckoutRepositoryInterface checkoutRepositoryInterface = CheckoutRepository(apiClient: Get.find(), sharedPreferences: Get.find());

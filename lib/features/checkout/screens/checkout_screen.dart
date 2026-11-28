@@ -1,3 +1,4 @@
+import 'package:fasta_deliveries/helper/ml_events.dart';
 import 'package:flutter/foundation.dart';
 import 'package:fasta_deliveries/features/checkout/domain/models/checkout_summary_body_model.dart';
 import 'package:fasta_deliveries/features/checkout/widgets/delivery_address_coverage_sheet.dart';
@@ -102,6 +103,7 @@ class CheckoutScreenState extends State<CheckoutScreen> {
   @override
   void initState() {
     super.initState();
+    MlEvents.instance.track('checkout_start', props: {'store_id': widget.storeId});
 
     initCall();
     print('=======guest id: ${AuthHelper.getGuestId()}');

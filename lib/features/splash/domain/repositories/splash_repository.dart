@@ -33,6 +33,11 @@ class SplashRepository implements SplashRepositoryInterface {
         if (response.statusCode == 200) {
           responseData = Response(statusCode: 200, body: response.body);
           LocalClient.organize(source, cacheId, response.bodyString ?? '', apiClient.getHeader());
+        } else {
+          // Keep the real failure (5xx, or statusCode 1 + noInternetMessage on a
+          // timeout/socket error) so the splash can tell offline from a server
+          // error. Replacing it with a bare statusCode 0 hid both.
+          responseData = response;
         }
 
       case DataSourceEnum.local:

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:fasta_deliveries/features/cms/cms_content.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -139,6 +140,8 @@ import 'package:fasta_deliveries/util/app_constants.dart';
 import 'package:fasta_deliveries/util/html_type.dart';
 
 class RouteHelper {
+  static const String cmsFaq = '/help-faqs';
+  static const String cmsNews = '/news';
   static String _safeDecodeComponent(String? value) {
     if (value == null || value.isEmpty) return '';
     try {
@@ -551,6 +554,8 @@ class RouteHelper {
       '$serviceDigitalPaymentFailedScreen?booking_id=$bookingId&total_price=$totalPrice&is_pay_after_service_active=$isPayAfterServiceActive'
       '&is_digital_payment_active=$isDigitalPaymentActive&is_offline_payment_active=$isOfflinePaymentActive&create_account=$createAccount'; // Service Module (addon)
   static List<GetPage> routes = [
+    GetPage(name: cmsFaq, page: () => const CmsListScreen(type: 'faq')),
+    GetPage(name: cmsNews, page: () => const CmsListScreen(type: 'news')),
     GetPage(name: initial, page: () {
       print('=======route: ${Get.parameters['module']} ${Get.parameters['module']} // ${Get.parameters['module'] != null && Get.parameters['module']!.isNotEmpty && Get.parameters['module'] != 'null'}');
       if(Get.parameters['qr'] != null) {
