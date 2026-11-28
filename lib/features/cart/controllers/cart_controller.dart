@@ -1,3 +1,4 @@
+import 'package:fasta_deliveries/helper/ml_events.dart';
 import 'package:fasta_deliveries/helper/seller_analytics.dart';
 import 'dart:async';
 
@@ -504,6 +505,8 @@ class CartController extends GetxController implements GetxService {
       _cartList = [];
       _cartList.addAll(cartServiceInterface.formatOnlineCartToLocalCart(onlineCartModel: onlineCartList));
       SellerAnalytics.track(storeId ?? cartStoreId, 'add_to_cart');
+      MlEvents.instance.track('add_to_cart', entityType: 'item', entityId: cart.itemId,
+        props: {'quantity': cart.quantity, 'price': double.tryParse(cart.price ?? ''), 'store_id': storeId ?? cartStoreId});
       calculationCart();
       success = true;
       await getAllCarts(notify: false);

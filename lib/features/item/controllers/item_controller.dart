@@ -1,3 +1,4 @@
+import 'package:fasta_deliveries/helper/ml_events.dart';
 import 'package:fasta_deliveries/helper/seller_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -868,6 +869,8 @@ class ItemController extends GetxController implements GetxService {
 
     if (_item != null) {
       SellerAnalytics.track(_item?.storeId, 'product_view');
+      MlEvents.instance.track('view', entityType: 'item', entityId: _item?.id, moduleId: _item?.moduleId,
+        props: {'price': _item?.price, 'store_id': _item?.storeId, 'category_id': _item?.categoryId});
       initData(_item, cart);
       setExistInCart(_item, _selectedVariations);
     }
@@ -1131,6 +1134,8 @@ class ItemController extends GetxController implements GetxService {
     int? availableStock,
     // bool inNewDesign = true,
   }) {
+    MlEvents.instance.track('product_tap', entityType: 'item', entityId: item?.id, moduleId: item?.moduleId,
+      props: {'price': item?.price, 'store_id': item?.storeId, 'category_id': item?.categoryId});
     if (item!.moduleType == AppConstants.ecommerce) {
       Get.toNamed(
         RouteHelper.getItemDetailsRoute(
