@@ -1,3 +1,4 @@
+import 'package:fasta_deliveries/features/service_module/booking_details/controllers/service_journey_controller.dart';
 import 'package:fasta_deliveries/helper/ml_events.dart';
 import 'package:fasta_deliveries/helper/address_helper.dart';
 
@@ -825,6 +826,7 @@ Future<Map<String, Map<String, String>>> init() async {
   BookingServiceInterface bookingServiceInterface = BookingService(bookingRepositoryInterface: Get.find());
   Get.lazyPut(() => bookingServiceInterface, fenix: true);
   Get.lazyPut(() => BookingController(bookingServiceInterface: Get.find()), fenix: true);
+  Get.lazyPut(() => ServiceJourneyController(apiClient: Get.find()), fenix: true);
 
   ServiceReviewRepositoryInterface serviceReviewRepositoryInterface = ServiceReviewRepository(apiClient: Get.find());
   Get.lazyPut(() => serviceReviewRepositoryInterface, fenix: true);
