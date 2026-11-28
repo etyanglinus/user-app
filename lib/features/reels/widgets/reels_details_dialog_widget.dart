@@ -1,3 +1,4 @@
+import 'package:fasta_deliveries/helper/ml_events.dart';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -361,16 +362,47 @@ class _ReelDetailsPageState extends State<_ReelDetailsPage> {
   // True while the item/vehicle behind an "Order Now" tap is being fetched, so the
   // button shows a loader and can't be tapped again until the fetch resolves.
   bool _isPreparingOrder = false;
+  // ML watch milestones (25/50/75/100 %) already reported during this viewing.
+  final Set<int> _milestonesSent = {};
+  Duration _lastTickPosition = Duration.zero;
 
   @override
   void initState() {
     super.initState();
     _isReelMuted.addListener(_handleMuteChanged);
     if(widget.isActive) {
+      _startViewing();
       _prepareMedia(autoPlay: true);
       _loadReelStats();
     } else if(widget.shouldPreload) {
       _prepareMedia(autoPlay: false);
+    }
+  }
+
+  /// A new viewing of this reel: report the view and start milestones afresh.
+  void _startViewing() {
+    _milestonesSent.clear();
+    _lastTickPosition = Duration.zero;
+    MlEvents.instance.track('view', surface: MlEvents.surfaceReels, entityType: 'reel', entityId: widget.reel.reelId,
+      props: {'store_id': widget.reel.storeId});
+  }
+
+  /// Report each watch milestone once per viewing. The video loops, so 100 % is reported
+  /// when playback reaches the end or wraps back to the start.
+  void _onVideoTick() {
+    final VideoPlayerController? controller = _videoController;
+    if(!widget.isActive || controller == null || !controller.value.isInitialized) return;
+    final int total = controller.value.duration.inMilliseconds;
+    if(total <= 0) return;
+    final Duration pos = controller.value.position;
+    final bool wrapped = pos < _lastTickPosition && _lastTickPosition.inMilliseconds > total * 0.9;
+    _lastTickPosition = pos;
+    final double done = wrapped ? 1.0 : pos.inMilliseconds / total;
+    for(final int m in const [25, 50, 75, 100]) {
+      if(done >= (m == 100 ? 0.97 : m / 100) && _milestonesSent.add(m)) {
+        MlEvents.instance.track('watch_milestone', surface: MlEvents.surfaceReels, entityType: 'reel',
+          entityId: widget.reel.reelId, props: {'milestone': m, 'store_id': widget.reel.storeId});
+      }
     }
   }
 
@@ -510,6 +542,7 @@ class _ReelDetailsPageState extends State<_ReelDetailsPage> {
 
     // ── Active state changes ──────────────────────────────────────────────
     if(widget.isActive && !oldWidget.isActive) {
+      _startViewing();
       _loadReelStats();
       if(_videoController != null && _videoController!.value.isInitialized) {
         // Controller is already ready (from preload or a previous pause) — just resume.
@@ -657,6 +690,7 @@ class _ReelDetailsPageState extends State<_ReelDetailsPage> {
         await controller.play();
       }
       _videoController = controller;
+      controller.addListener(_onVideoTick);
       _hasVideoError = false;
     } catch (e) {
       print('=======> ReelDetails: Video controller error: $e');
@@ -686,6 +720,7 @@ class _ReelDetailsPageState extends State<_ReelDetailsPage> {
     final VideoPlayerController? controller = _videoController;
     _videoController = null;
     if(controller != null) {
+      controller.removeListener(_onVideoTick);
       if(controller.value.isInitialized) {
         _savedPosition = controller.value.position;
       }
