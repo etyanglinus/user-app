@@ -55,12 +55,12 @@ Future<void> main() async {
 
   if(GetPlatform.isWeb){
     await Firebase.initializeApp(options: const FirebaseOptions(
-        apiKey: "AIzaSyD0Z911mOoWCVkeGdjhIKwWFPRgvd6ZyAw",
-        authDomain: "stackmart-500c7.firebaseapp.com",
-        projectId: "stackmart-500c7",
-        storageBucket: "stackmart-500c7.appspot.com",
-        messagingSenderId: "491987943015",
-        appId: "1:491987943015:web:d8bc7ab8dbc9991c8f1ec2"
+        apiKey: "AIzaSyBhPVJQjVKv5BqlJIyg1p8FtyLlqBzY1sg",
+        authDomain: "fasta-rides-457315.firebaseapp.com",
+        projectId: "fasta-rides-457315",
+        storageBucket: "fasta-rides-457315.firebasestorage.app",
+        messagingSenderId: "833886382257",
+        appId: "1:833886382257:web:b347c19f1400383595da90"
     ));
   } else {
     await Firebase.initializeApp();
