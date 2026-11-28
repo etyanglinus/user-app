@@ -17,8 +17,7 @@ class AppConstants {
   static const String webHostedUrl = 'https://web.fastadeliveries.co.ke';
   static const bool stopPolylineAnimation = false;
   static const String googleServerClientId =
-      '833886382257-4h58fqsoor8sl3euktnsmg87fdo2c0n7.apps.googleusercontent.com
-';
+      '833886382257-4h58fqsoor8sl3euktnsmg87fdo2c0n7.apps.googleusercontent.com';
   static const String pusherBroadcustUrl = '/api/v1/broadcasting/user-auth';
 
   static const String baseUrl = 'https://fastadeliveries.co.ke';
