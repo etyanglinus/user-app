@@ -5,7 +5,7 @@ import 'package:fasta_deliveries/util/images.dart';
 
 class AppConstants {
   static const String appName = 'Fasta Deliveries';
-  static const double appVersion = 4.2;
+  static const double appVersion = 5.0;
   /// Human-readable version sent with ML events (keep in step with pubspec `version`).
   static const String appVersionName = '5.0.0';
 
