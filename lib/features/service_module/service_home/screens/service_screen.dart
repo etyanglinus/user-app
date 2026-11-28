@@ -1,3 +1,4 @@
+import 'package:fasta_deliveries/features/service_module/service_checkout/screens/service_booking_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:fasta_deliveries/features/service_module/service_home/controllers/service_controller.dart';
@@ -164,6 +165,17 @@ class _ServiceCard extends StatelessWidget {
                     Text('From $priceText'),
                   ],
                   const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        Get.to(() => ServiceBookingScreen(service: service));
+                      },
+                      child: const Text('Book now'),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton(
