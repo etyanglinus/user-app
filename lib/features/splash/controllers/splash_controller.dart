@@ -61,6 +61,12 @@ class SplashController extends GetxController implements GetxService {
   bool _hasConnection = true;
   bool get hasConnection => _hasConnection;
 
+  /// True when the last `/config` call failed while the device was online
+  /// (HTTP 5xx, timeout, unparseable body). The splash shows the retry screen
+  /// for this too; before, a server error left the customer on the logo.
+  bool _configServerError = false;
+  bool get configServerError => _configServerError;
+
   ModuleModel? _module;
   ModuleModel? get module => _module;
 
@@ -180,6 +186,7 @@ class SplashController extends GetxController implements GetxService {
     bool fromSplash = false,
   }) async {
     _hasConnection = true;
+    _configServerError = false;
     _moduleIndex = 0;
     Response response;
     if (source == DataSourceEnum.local && !fromDemoReset) {
@@ -196,6 +203,7 @@ class SplashController extends GetxController implements GetxService {
         notificationBody,
         canRoute,
         fromSplash,
+        fromCache: true,
       );
       getConfigData(
         handleMaintenanceMode: handleMaintenanceMode,
@@ -233,8 +241,9 @@ class SplashController extends GetxController implements GetxService {
     bool fromDemoReset,
     NotificationBodyModel? notificationBody,
     bool canRoute,
-    bool fromSplash,
-  ) async {
+    bool fromSplash, {
+    bool fromCache = false,
+  }) async {
     if (response.statusCode == 200) {
       _data = response.body;
       _configModel = ConfigModel.fromJson(response.body);
@@ -277,10 +286,12 @@ class SplashController extends GetxController implements GetxService {
         route(body: notificationBody);
       }
       _onRemoveLoader();
-    } else {
-      if (response.statusText == ApiClient.noInternetMessage) {
-        _hasConnection = false;
-      }
+    } else if (!fromCache && _configModel == null) {
+      // Network config failed and there is no cached config to start from.
+      // A cache miss alone (fresh install) is not a failure: the network call
+      // that follows it decides.
+      _hasConnection = false;
+      _configServerError = response.statusText != ApiClient.noInternetMessage;
     }
     update();
   }

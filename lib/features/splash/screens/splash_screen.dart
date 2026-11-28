@@ -129,6 +129,9 @@ class SplashScreenState extends State<SplashScreen> {
                     ],
                   )
                 : NoInternetScreen(
+                    messageKey: splashController.configServerError
+                        ? 'couldnt_reach_server'
+                        : null,
                     child: SplashScreen(
                       body: widget.body,
                       deeplinkUrl: widget.deeplinkUrl,

@@ -3065,8 +3065,5 @@
   "date_of_birth_hint": "Get a birthday gift from us every year. You can set this only once.",
   "date_of_birth_locked_hint": "Your date of birth can only be set once. Contact support to correct it.",
   "birthday_gift": "Birthday gift",
-  "help_and_faqs": "Help & FAQs",
-  "news_and_updates": "News & updates",
-  "nothing_here_yet": "Nothing here yet.",
-  "dismiss": "Dismiss"
+  "couldnt_reach_server": "We couldn't reach Fasta right now. We'll keep trying."
 }
